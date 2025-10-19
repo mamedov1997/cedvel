@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Faktura İdarəetmə Sistemi</title>
+    <style>
+        /* --- ƏSAS STİLLƏR --- */
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
+
+        :root {
+            --primary-color: #005A9C;
+            --secondary-color: #007BFF;
+            --background-color: #f4f7f6;
+            --container-color: #ffffff;
+            --text-color: #333;
+            --border-color: #e0e0e0;
+            --success-color: #28a745;
+            --error-color: #dc3545;
+            --shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            --border-radius: 8px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .main-container {
+            width: 100%;
+            max-width: 900px;
+            background-color: var(--container-color);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            /* Giriş animasiyası */
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        /* --- NAVİQASİYA (MENYU) --- */
+        .tab-nav {
+            display: flex;
+            background-color: var(--primary-color);
+        }
+
+        .tab-button {
+            flex: 1;
+            padding: 18px;
+            font-size: 16px;
+            font-weight: 500;
+            color: white;
+            background-color: var(--primary-color);
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            opacity: 0.7;
+        }
+
+        .tab-button:hover {
+            background-color: var(--secondary-color);
+            opacity: 1;
+        }
+
+        .tab-button.active {
+            background-color: var(--container-color);
+            color: var(--primary-color);
+            opacity: 1;
+            border-bottom: 3px solid var(--secondary-color);
+        }
+
+        /* --- PANEL STİLLƏRİ --- */
+        .tab-panel {
+            padding: 30px;
+            display: none; /* Başlanğıcda hamısı gizli */
+            animation: slideIn 0.4s ease-out;
+        }
+
+        .tab-panel.active {
+            display: block;
+        }
+
+        h2 {
+            text-align: center;
+            margin-bottom: 25px;
+            color: var(--primary-color);
+            font-weight: 700;
+        }
+
+        /* --- FORM STİLLƏRİ --- */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-row {
+            display: flex;
+            flex-wrap: wrap; /* Mobil üçün */
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .form-row input,
+        .form-row select {
+            flex: 1; /* Hər biri bərabər yer tutsun */
+            min-width: 200px; /* Mobil üçün minimum en */
+            padding: 12px 15px;
+            font-size: 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .form-row input:focus,
+        .form-row select:focus {
+            outline: none;
+            border-color: var(--secondary-color);
+            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.15);
+        }
+
+        /* Tarix inputları üçün placeholder göstərmə */
+        input[type="date"] {
+            position: relative;
+            color: #777;
+        }
+        
+        input[type="date"]::-webkit-calendar-picker-indicator {
+            cursor: pointer;
+        }
+        
+        input[type="date"]:invalid:before {
+            content: attr(placeholder);
+            position: absolute;
+            color: #777;
+        }
+        
+        input[type="date"]:focus:before,
+        input[type="date"]:valid:before {
+            display: none;
+        }
+
+        /* --- DÜYMƏ VƏ YÜKLƏNMƏ --- */
+        .submit-button {
+            width: 100%;
+            padding: 14px;
+            font-size: 16px;
+            font-weight: 700;
+            color: white;
+            background-color: var(--secondary-color);
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.1s ease;
+            position: relative;
+        }
+
+        .submit-button:hover {
+            background-color: var(--primary-color);
+        }
+
+        .submit-button:active {
+            transform: scale(0.99);
+        }
+
+        .submit-button:disabled {
+            background-color: #aaa;
+            cursor: not-allowed;
+        }
+
+        .loader {
+            width: 18px;
+            height: 18px;
+            border: 2px solid #FFF;
+            border-bottom-color: transparent;
+            border-radius: 50%;
+            display: inline-block;
+            box-sizing: border-box;
+            animation: rotation 1s linear infinite;
+            position: absolute;
+            right: 20px;
+            top: 50%;
+            margin-top: -9px;
+            display: none; /* Gizli */
+        }
+        
+        .submit-button.loading .loader {
+            display: block; /* Yüklənmə zamanı göstər */
+        }
+        .submit-button.loading .button-text {
+            visibility: hidden; /* Yüklənmə zamanı mətni gizlət */
+        }
+
+        /* --- GERİ DÖNÜŞ (FEEDBACK) --- */
+        #form-feedback, #search-feedback {
+            padding: 12px;
+            border-radius: 6px;
+            text-align: center;
+            font-weight: 500;
+            margin-top: 20px;
+            display: none; /* Gizli */
+            animation: popIn 0.3s ease-out;
+        }
+
+        #form-feedback.success, #search-feedback.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+            display: block;
+        }
+
+        #form-feedback.error, #search-feedback.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+            display: block;
+        }
+        
+        /* --- AXTARIŞ NƏTİCƏLƏRİ CƏDVƏLİ --- */
+        #search-results-container {
+            margin-top: 25px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        #results-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        #results-table th, #results-table td {
+            border: 1px solid var(--border-color);
+            padding: 12px;
+            text-align: left;
+            font-size: 14px;
+        }
+        
+        #results-table th {
+            background-color: #f8f9fa;
+            color: var(--primary-color);
+            position: sticky;
+            top: 0;
+        }
+        
+        #results-table tr:nth-child(even) {
+            background-color: var(--background-color);
+        }
+
+        /* --- ANİMASİYALAR --- */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        @keyframes popIn {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        @keyframes rotation {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="main-container">
+        <nav class="tab-nav">
+            <button class="tab-button active" data-tab="add-data">Məlumat Əlavə Et</button>
+            <button class="tab-button" data-tab="search-data">Məlumat Axtar</button>
+        </nav>
+
+        <div id="add-data" class="tab-panel active">
+            <h2>Yeni Faktura Qeydiyyatı</h2>
+            <form id="dataForm">
+                <div class="form-group">
+                    <div class="form-row">
+                        <input type="text" id="fakturaNo" placeholder="Faktura nömrəsi" required>
+                        <input type="text" id="musteriKodu" placeholder="Müştəri kodu" required>
+                        <input type="text" id="musteriAd" placeholder="Müştəri ad/soyad" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="form-row">
+                        <input type="text" onfocus="(this.type='date')" onblur="(this.type='text')" id="muqavileTarixi" placeholder="Müqavilə tarixi" required>
+                        <input type="text" onfocus="(this.type='date')" onblur="(this.type='text')" id="imzalanmaTarixi" placeholder="İmzalandığı tarix" required>
+                        <select id="imzalayanSexs" required>
+                            <option value="" disabled selected>İmzaladan şəxs...</option>
+                            <option value="Ə.Məleykə">Ə.Məleykə</option>
+                            <option value="M.Arzu">M.Arzu</option>
+                            <option value="Ə.Gülşad">Ə.Gülşad</option>
+                            <option value="H.Aidə">H.Aidə</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <button type="submit" class="submit-button" id="submitBtn">
+                    <span class="button-text">Yaddaşda Saxla</span>
+                    <span class="loader"></span>
+                </button>
+                
+                <div id="form-feedback"></div>
+            </form>
+        </div>
+
+        <div id="search-data" class="tab-panel">
+            <h2>Məlumat Axtarışı</h2>
+            <form id="searchForm">
+                <div class="form-group">
+                    <div class="form-row">
+                        <input type="text" id="searchFaktura" placeholder="Axtarılacaq faktura nömrəsini daxil edin" required style="flex: 3;">
+                        <button type="submit" class="submit-button" id="searchBtn" style="flex: 1;">
+                            <span class="button-text">Axtar</span>
+                            <span class="loader"></span>
+                        </button>
+                    </div>
+                </div>
+                
+                <div id="search-feedback"></div>
+            </form>
+            
+            <div id="search-results-container">
+                <table id="results-table" style="display: none;">
+                    <thead>
+                        <tr>
+                            <th>Faktura №</th>
+                            <th>Müştəri Kodu</th>
+                            <th>Müştəri Ad/Soyad</th>
+                            <th>Müqavilə Tarixi</th>
+                            <th>İmzalanma Tarixi</th>
+                            <th>İmzalayan Şəxs</th>
+                        </tr>
+                    </thead>
+                    <tbody id="results-tbody">
+                        </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Vacib Dəyişən ---
+        // Addım 1-də kopyaladığınız Web App URL-i bu dırnaqların arasına yapışdırın
+        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzmx9N9XLc0tHKTr62xf47MnpblK_CVZAqCVDzh-_Gsp7pjHvMMOijL4M3xh-zz02Sdjg/exec';
+
+        // --- Elementləri seçirik ---
+        const tabButtons = document.querySelectorAll('.tab-button');
+        const tabPanels = document.querySelectorAll('.tab-panel');
+        
+        const dataForm = document.getElementById('dataForm');
+        const submitBtn = document.getElementById('submitBtn');
+        const formFeedback = document.getElementById('form-feedback');
+        
+        const searchForm = document.getElementById('searchForm');
+        const searchBtn = document.getElementById('searchBtn');
+        const searchFeedback = document.getElementById('search-feedback');
+        const resultsTable = document.getElementById('results-table');
+        const resultsTbody = document.getElementById('results-tbody');
+
+        // --- Menyuların (Tab) İdarə Olunması ---
+        tabButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                // Bütün düymələrdən 'active' statusunu sil
+                tabButtons.forEach(btn => btn.classList.remove('active'));
+                // Bu düyməyə 'active' statusu ver
+                button.classList.add('active');
+
+                // Hədəf paneli tap
+                const targetPanelId = button.getAttribute('data-tab');
+                
+                // Bütün panelləri gizlət
+                tabPanels.forEach(panel => {
+                    panel.classList.remove('active');
+                });
+                
+                // Hədəf paneli göstər
+                document.getElementById(targetPanelId).classList.add('active');
+            });
+        });
+
+        // --- Məlumat Göndərmə (Yaddaşda Saxlama) ---
+        dataForm.addEventListener('submit', function(e) {
+            e.preventDefault(); // Formun səhifəni yeniləməsinin qarşısını al
+
+            // Düyməni yüklənmə rejiminə keçiririk
+            toggleLoader(submitBtn, true);
+            showFeedback(formFeedback, '', ''); // Köhnə mesajı təmizlə
+
+            // Formdakı məlumatları obyekt şəklində yığırıq
+            const formData = {
+                action: 'writeData', // Apps Script-ə nə edəcəyini deyirik
+                fakturaNo: document.getElementById('fakturaNo').value,
+                musteriKodu: document.getElementById('musteriKodu').value,
+                musteriAd: document.getElementById('musteriAd').value,
+                muqavileTarixi: document.getElementById('muqavileTarixi').value,
+                imzalanmaTarixi: document.getElementById('imzalanmaTarixi').value,
+                imzalayanSexs: document.getElementById('imzalayanSexs').value
+            };
+
+            // Məlumatı Google Apps Script-ə göndəririk
+            fetch(GOOGLE_SCRIPT_URL, {
+                method: 'POST',
+                body: JSON.stringify(formData),
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.status === 'success') {
+                    showFeedback(formFeedback, 'success', result.message);
+                    dataForm.reset(); // Formu təmizlə
+                } else {
+                    showFeedback(formFeedback, 'error', 'XƏTA: ' + result.message);
+                }
+            })
+            .catch(error => {
+                console.error('Göndərmə xətası:', error);
+                showFeedback(formFeedback, 'error', 'Sistem xətası baş verdi. İnternet bağlantınızı yoxlayın.');
+            })
+            .finally(() => {
+                // Düyməni normal vəziyyətə qaytarırıq
+                toggleLoader(submitBtn, false);
+            });
+        });
+
+        // --- Məlumat Axtarışı ---
+        searchForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            toggleLoader(searchBtn, true);
+            showFeedback(searchFeedback, '', ''); // Köhnə mesajları təmizlə
+            resultsTable.style.display = 'none'; // Köhnə cədvəli gizlət
+            resultsTbody.innerHTML = ''; // Köhnə nəticələri təmizlə
+
+            const fakturaToSearch = document.getElementById('searchFaktura').value;
+
+            const searchData = {
+                action: 'searchData', // Apps Script-ə axtarış etdiyimizi deyirik
+                fakturaNo: fakturaToSearch
+            };
+
+            fetch(GOOGLE_SCRIPT_URL, {
+                method: 'POST',
+                body: JSON.stringify(searchData),
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.status === 'success') {
+                    if (result.data && result.data.length > 0) {
+                        // Nəticələr varsa, cədvəli doldur
+                        displayResults(result.data);
+                    } else {
+                        // Nəticə yoxdursa
+                        showFeedback(searchFeedback, 'error', 'Bu faktura nömrəsinə uyğun məlumat tapılmadı.');
+                    }
+                } else {
+                    showFeedback(searchFeedback, 'error', 'XƏTA: ' + result.message);
+                }
+            })
+            .catch(error => {
+                console.error('Axtarış xətası:', error);
+                showFeedback(searchFeedback, 'error', 'Sistem xətası baş verdi.');
+            })
+            .finally(() => {
+                toggleLoader(searchBtn, false);
+            });
+        });
+        
+        // --- Köməkçi Funksiyalar ---
+
+        // Axtarış nəticələrini cədvələ dolduran funksiya
+        function displayResults(data) {
+            resultsTbody.innerHTML = ''; // Cədvəli təmizlə
+            
+            data.forEach(row => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${row.fakturaNo}</td>
+                    <td>${row.musteriKodu}</td>
+                    <td>${row.musteriAd}</td>
+                    <td>${formatDate(row.muqavileTarixi)}</td>
+                    <td>${formatDate(row.imzalanmaTarixi)}</td>
+                    <td>${row.imzalayanSexs}</td>
+                `;
+                resultsTbody.appendChild(tr);
+            });
+            
+            resultsTable.style.display = 'table'; // Cədvəli göstər
+        }
+
+        // Düymələrdə yüklənmə animasiyasını idarə edir
+        function toggleLoader(button, isLoading) {
+            button.disabled = isLoading;
+            if (isLoading) {
+                button.classList.add('loading');
+            } else {
+                button.classList.remove('loading');
+            }
+        }
+
+        // Geri dönüş (feedback) mesajlarını göstərir
+        function showFeedback(element, type, message) {
+            element.className = ''; // Bütün klassları təmizlə
+            if (type) {
+                element.classList.add(type);
+                element.textContent = message;
+                element.style.display = 'block';
+            } else {
+                element.style.display = 'none';
+            }
+        }
+        
+        // Google Sheet-dən gələn tarixi formatlayır (əgər lazımdırsa)
+        function formatDate(dateString) {
+            if (!dateString) return '';
+            try {
+                // Google bəzən tarixi ISO formatında (2025-10-18T20:00:00.000Z) qaytarır
+                const date = new Date(dateString);
+                // Lokal tarix formatına çeviririk (dd.mm.yyyy)
+                return date.toLocaleDateString('az-AZ');
+            } catch (e) {
+                return dateString; // Formatlaşdıra bilməsə, olduğu kimi qaytar
+            }
+        }
+
+    </script>
+</body>
+</html>
