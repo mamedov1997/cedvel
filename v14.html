@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Faktura İdarəetmə Sistemi (v14)</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+
+    <style>
+        :root {
+            --primary-color: #005A9C; --secondary-color: #007BFF;
+            --info-color: #17a2b8; --info-hover-color: #138496;
+            --background-color: #f4f7f6; --container-color: #ffffff;
+            --text-color: #333; --text-light-color: #777;
+            --border-color: #e0e0e0; --success-color: #28a745;
+            --error-color: #dc3545; --error-hover-color: #c82333;
+            --warning-color: #ffc107; --warning-hover-color: #e0a800;
+            --shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            --shadow-hover: 0 6px 16px rgba(0, 0, 0, 0.1);
+            --border-radius: 8px; --transition-main: all 0.3s ease;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Roboto', sans-serif; background-color: var(--background-color);
+            color: var(--text-color); display: flex; justify-content: center;
+            align-items: center; min-height: 100vh; padding: 20px;
+        }
+        .material-symbols-outlined { vertical-align: middle; font-size: 20px; pointer-events: none; }
+        .main-container {
+            width: 100%; max-width: 1100px; background-color: var(--container-color);
+            border-radius: var(--border-radius); box-shadow: var(--shadow);
+            overflow: hidden; animation: fadeIn 0.5s ease-out;
+            transition: var(--transition-main);
+        }
+        .tab-nav { display: flex; background-color: var(--primary-color); }
+        .tab-button {
+            flex: 1; padding: 18px; font-size: 16px; font-weight: 500;
+            color: white; background-color: var(--primary-color);
+            border: none; cursor: pointer; transition: var(--transition-main);
+            opacity: 0.7; display: flex; align-items: center;
+            justify-content: center; gap: 8px;
+        }
+        .tab-button:hover { background-color: var(--secondary-color); opacity: 1; }
+        .tab-button.active {
+            background-color: var(--container-color); color: var(--primary-color);
+            opacity: 1; border-bottom: 3px solid var(--secondary-color);
+        }
+        .tab-panel { padding: 30px; display: none; animation: slideIn 0.4s ease-out; }
+        .tab-panel.active { display: block; }
+        h2 { text-align: center; margin-bottom: 25px; color: var(--primary-color); font-weight: 700; }
+        .form-group { margin-bottom: 20px; }
+        .form-row { display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 15px; }
+        .input-group { position: relative; flex: 1; }
+        .input-icon {
+            position: absolute; left: 12px; top: 50%;
+            transform: translateY(-50%); color: var(--text-light-color);
+            transition: var(--transition-main); pointer-events: none;
+        }
+        .form-row input, .form-row select {
+            flex: 1; min-width: 200px; width: 100%;
+            padding: 12px 15px 12px 45px; font-size: 15px;
+            border: 1px solid var(--border-color); border-radius: 6px;
+            transition: var(--transition-main);
+        }
+        .form-row input:focus, .form-row select:focus {
+            outline: none; border-color: var(--secondary-color);
+            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.15);
+        }
+        .form-row input:focus + .input-icon,
+        .form-row select:focus + .input-icon { color: var(--primary-color); }
+        input[type="text"].date-input { color: #333; }
+        input[type="text"].date-input:invalid { color: var(--text-light-color); }
+        .submit-button {
+            width: 100%; padding: 14px; font-size: 16px; font-weight: 700;
+            color: white; background-color: var(--secondary-color);
+            border: none; border-radius: 6px; cursor: pointer;
+            position: relative; display: flex; align-items: center;
+            justify-content: center; transition: var(--transition-main);
+            box-shadow: var(--shadow);
+        }
+        .submit-button:hover {
+            background-color: var(--primary-color);
+            transform: translateY(-2px); box-shadow: var(--shadow-hover);
+        }
+        .submit-button:active { transform: scale(0.99); }
+        .submit-button:disabled {
+            background-color: #aaa; cursor: not-allowed;
+            transform: translateY(0); box-shadow: none;
+        }
+        .button-content { display: flex; align-items: center; gap: 8px; transition: var(--transition-main); }
+        
+        .loader {
+            width: 20px; height: 20px; border: 3px solid rgba(255,255,255,0.3);
+            border-top-color: #FFF; border-radius: 50%;
+            display: none; animation: rotation 1s linear infinite;
+        }
+        .submit-button.loading .loader { display: block; }
+        .submit-button.loading .button-content { display: none; }
+        
+        /* DƏYİŞDİ: Form feedback artıq istifadə olunmur */
+        /* #form-feedback, #edit-feedback, #delete-feedback { ... } */
+        
+        /* Axtarış paneli üçün feedback qaldı */
+        #search-feedback {
+            padding: 12px 15px; border-radius: 6px; text-align: left;
+            font-weight: 500; margin-top: 20px;
+            animation: popIn 0.3s ease-out;
+            display: none; align-items: center; gap: 10px;
+        }
+         #search-feedback::before {
+            font-family: 'Material Symbols Outlined'; font-size: 22px; line-height: 1;
+        }
+        .success { /* Bu həm toast, həm axtarış üçün qalsın */
+            background-color: #d4edda; color: #155724;
+            border: 1px solid #c3e6cb; display: flex !important;
+        }
+        .success::before { content: "check_circle"; color: var(--success-color); }
+        .error { /* Bu həm toast, həm axtarış üçün qalsın */
+            background-color: #f8d7da; color: #721c24;
+            border: 1px solid #f5c6cb; display: flex !important;
+        }
+        .error::before { content: "error"; color: var(--error-color); }
+        
+        #simple-search-form {
+            background-color: #f8f9fa;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            padding: 20px;
+        }
+        #simple-search-form .form-row { margin-bottom: 0; align-items: center; }
+        #simple-search-form .input-group { flex: 2; }
+        #simple-search-form .input-group input { padding: 12px 15px 12px 45px; font-size: 15px; }
+        #simple-search-form .submit-button { flex: 1; }
+        #showAllBtn { background-color: var(--info-color); }
+        #showAllBtn:hover { background-color: var(--info-hover-color); }
+        
+        #search-results-container { 
+            margin-top: 20px; min-height: 200px;
+            position: relative; overflow-x: auto;
+        }
+        #table-loader-overlay {
+            position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            background-color: rgba(255, 255, 255, 0.7);
+            z-index: 10; display: none;
+            align-items: center; justify-content: center;
+        }
+        #table-loader-overlay .loader {
+            display: block; width: 40px; height: 40px;
+            border-color: rgba(0,0,0,0.2);
+            border-top-color: var(--primary-color);
+        }
+        #results-table { width: 100%; border-collapse: collapse; }
+        #results-table th, #results-table td {
+            border: 1px solid var(--border-color); padding: 12px;
+            text-align: left; font-size: 14px;
+        }
+        #results-table th {
+            background-color: #f8f9fa; color: var(--primary-color);
+            position: sticky; top: 0; white-space: nowrap;
+        }
+        #results-table tbody tr:hover { background-color: #e9ecef; transition: background-color 0.2s ease; }
+        
+        .sortable-header {
+            cursor: pointer; user-select: none;
+            position: relative; padding-right: 25px;
+        }
+        .header-content {
+            display: inline-flex; align-items: center; gap: 6px;
+        }
+        .header-content .material-symbols-outlined {
+            font-size: 18px; color: var(--primary-color);
+            pointer-events: none; vertical-align: text-bottom;
+        }
+        .sortable-header .sort-icon {
+            position: absolute; right: 5px; top: 50%;
+            transform: translateY(-50%); font-size: 16px;
+            color: var(--text-light-color); transition: var(--transition-main);
+            pointer-events: none;
+        }
+        .sortable-header:hover { background-color: #e9ecef; }
+        .sortable-header.sorted .sort-icon { color: var(--primary-color); }
+
+        #operations-header-content {
+            display: inline-flex; align-items: center; gap: 6px;
+        }
+        #operations-header-content .material-symbols-outlined {
+            font-size: 18px; color: var(--primary-color);
+            vertical-align: text-bottom;
+        }
+        
+        .action-buttons { display: flex; gap: 8px; }
+        .action-buttons button {
+            padding: 6px 10px; font-size: 13px; font-weight: 500;
+            color: white; border: none; border-radius: 4px;
+            cursor: pointer; transition: var(--transition-main);
+            display: flex; align-items: center;
+            justify-content: center; gap: 6px;
+        }
+        .action-buttons button .material-symbols-outlined { font-size: 18px; }
+        .edit-btn { background-color: var(--warning-color); }
+        .edit-btn:hover { background-color: var(--warning-hover-color); }
+        .delete-btn { background-color: var(--error-color); }
+        .delete-btn:hover { background-color: var(--error-hover-color); }
+
+        #pagination-controls {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 15px; border-top: 1px solid var(--border-color);
+            background-color: #f8f9fa;
+        }
+        .pagination-group { display: flex; align-items: center; gap: 10px; }
+        #pagination-status { font-size: 14px; font-weight: 500; color: var(--text-light-color); }
+        #rowsPerPageSelect {
+            padding: 8px; border-radius: 4px;
+            border: 1px solid var(--border-color); font-size: 14px;
+        }
+        .pagination-nav button {
+            background: none; border: 1px solid var(--border-color);
+            background-color: white; padding: 8px;
+            border-radius: 4px; cursor: pointer; transition: var(--transition-main);
+        }
+        .pagination-nav button:hover { background-color: #e9ecef; }
+        .pagination-nav button:disabled {
+            opacity: 0.5; cursor: not-allowed; background-color: #f8f9fa;
+        }
+        .pagination-nav button .material-symbols-outlined { font-size: 24px; }
+
+        .modal {
+            display: none; position: fixed; z-index: 1000;
+            left: 0; top: 0; width: 100%; height: 100%;
+            overflow: auto; background-color: rgba(0, 0, 0, 0.5);
+            animation: fadeIn 0.3s;
+        }
+        .modal-content {
+            background-color: var(--container-color); margin: 15% auto;
+            padding: 30px; border-radius: var(--border-radius);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            width: 90%; max-width: 500px;
+            animation: slideDown 0.4s ease-out;
+        }
+        .modal-header {
+            display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 15px; margin-bottom: 20px;
+        }
+        .modal-header h2 {
+            margin: 0; text-align: left; display: flex;
+            align-items: center; gap: 10px;
+        }
+        .close-btn {
+            color: var(--text-light-color); font-size: 32px; font-weight: bold;
+            cursor: pointer; transition: var(--transition-main);
+        }
+        .close-btn:hover, .close-btn:focus { color: var(--text-color); }
+        .modal-buttons { display: flex; gap: 15px; margin-top: 25px; }
+        #editModal .modal-content { max-width: 700px; margin: 10% auto; }
+        #cancel-edit-btn { background-color: #6c757d; }
+        #cancel-edit-btn:hover { background-color: #5a6268; }
+        #save-edit-btn { background-color: var(--success-color); }
+        #save-edit-btn:hover { background-color: #218838; }
+        #confirmModal .modal-header h2 { color: var(--error-color); }
+        #confirm-message { font-size: 16px; line-height: 1.5; text-align: center; }
+        #confirmDeleteBtn { background-color: var(--error-color); }
+        #confirmDeleteBtn:hover { background-color: var(--error-hover-color); }
+        
+        /* --- YENİ: TOAST BİLDİRİŞİ STİLİ --- */
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: #333;
+            color: white;
+            padding: 15px 20px;
+            border-radius: 6px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 1050;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.5s, visibility 0.5s, transform 0.5s ease;
+            transform: translateX(100%); /* Başlanğıcda kənarda */
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .toast.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(0); /* İçəri gəlir */
+        }
+        .toast.success {
+            background-color: var(--success-color);
+        }
+        .toast.error {
+            background-color: var(--error-color);
+        }
+        .toast::before { /* İkonlar üçün */
+             font-family: 'Material Symbols Outlined'; 
+             font-size: 22px; 
+             line-height: 1;
+        }
+        .toast.success::before { content: "check_circle"; }
+        .toast.error::before { content: "error"; }
+        /* --- TOAST STİLİNİN SONU --- */
+        
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+        @keyframes popIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+        @keyframes rotation { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-50px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+
+    <div class="main-container">
+        <nav class="tab-nav">...</nav> <div id="add-data" class="tab-panel active">
+             <h2>Yeni Faktura Qeydiyyatı</h2>
+            <form id="dataForm">
+                 <div class="form-group"> <div class="form-row">...</div> </div>
+                <div class="form-group"> <div class="form-row">...</div> </div>
+                <button type="submit" class="submit-button" id="submitBtn">...</button>
+                </form>
+        </div>
+
+        <div id="search-data" class="tab-panel">
+            <h2>Məlumat Bazası</h2>
+            <form id="simple-search-form">
+                 <div class="form-row">...</div>
+                <div id="search-feedback"></div>
+                </form>
+            
+            <div id="search-results-container">...</div>
+            
+            <div id="pagination-controls">...</div>
+        </div>
+    </div>
+
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">...</div>
+            <form id="editForm">
+                <div class="form-group"><div class="form-row">...</div></div>
+                <div class="form-group"><div class="form-row">...</div></div>
+                <div class="modal-buttons">...</div>
+                </form>
+        </div>
+    </div>
+    <div id="confirmModal" class="modal">...</div>
+    
+    <div id="toast-notification" class="toast">
+        <span id="toast-message"></span>
+    </div>
+
+
+    <script>
+        // --- Vacib Dəyişən ---
+        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzmx9N9XLc0tHKTr62xf47MnpblK_CVZAqCVDzh-_Gsp7pjHvMMOijL4M3xh-zz02Sdjg/exec';
+
+        // --- Elementləri seçirik (YENİLƏNİB) ---
+        // ... (əvvəlki elementlər eynidir)
+        const tabButtons = document.querySelectorAll('.tab-button');
+        const tabPanels = document.querySelectorAll('.tab-panel');
+        const dataForm = document.getElementById('dataForm');
+        const submitBtn = document.getElementById('submitBtn');
+        // const formFeedback = document.getElementById('form-feedback'); // Ləğv edildi
+        
+        const simpleSearchForm = document.getElementById('simple-search-form');
+        const searchFakturaInput = document.getElementById('searchFaktura');
+        const searchMusteriKoduInput = document.getElementById('searchMusteriKodu');
+        const searchBtn = document.getElementById('searchBtn');
+        const showAllBtn = document.getElementById('showAllBtn');
+        const searchFeedback = document.getElementById('search-feedback'); // Qaldı
+        // const deleteFeedback = document.getElementById('delete-feedback'); // Ləğv edildi
+        
+        const tableLoaderOverlay = document.getElementById('table-loader-overlay');
+        const resultsTable = document.getElementById('results-table');
+        const resultsTbody = document.getElementById('results-tbody');
+        const sortableHeaders = document.querySelectorAll('.sortable-header');
+        
+        const paginationControls = document.getElementById('pagination-controls');
+        const paginationStatus = document.getElementById('pagination-status');
+        const rowsPerPageSelect = document.getElementById('rowsPerPageSelect');
+        const prevPageBtn = document.getElementById('prevPageBtn');
+        const nextPageBtn = document.getElementById('nextPageBtn');
+        
+        const editModal = document.getElementById('editModal');
+        const editForm = document.getElementById('editForm');
+        const saveEditBtn = document.getElementById('save-edit-btn');
+        const cancelEditBtn = document.getElementById('cancel-edit-btn');
+        const closeModalBtn = document.getElementById('closeModalBtn');
+        // const editFeedback = document.getElementById('edit-feedback'); // Ləğv edildi
+        const confirmModal = document.getElementById('confirmModal');
+        const closeConfirmBtn = document.getElementById('closeConfirmBtn');
+        const cancelDeleteBtn = document.getElementById('cancelDeleteBtn');
+        const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+        const confirmMessage = document.getElementById('confirm-message');
+        const rowToDeleteInput = document.getElementById('rowToDelete');
+        
+        // YENİ: Toast Elementi
+        const toastElement = document.getElementById('toast-notification');
+        const toastMessageElement = document.getElementById('toast-message');
+        let toastTimeout; // Toast-ı gizlətmək üçün timer
+        
+        let currentSearchResults = [];
+        
+        let currentState = {
+            page: 1,
+            rowsPerPage: 10,
+            sortColumn: 0,
+            sortOrder: 'asc',
+            totalRows: 0,
+            totalPages: 0
+        };
+
+        // --- Menyuların İdarə Olunması (dəyişməyib) ---
+        tabButtons.forEach(button => { /* ... */ });
+
+        // --- Məlumat Göndərmə (Yaddaşda Saxlama) (YENİLƏNİB: showToast) ---
+        dataForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            toggleLoader(submitBtn, true);
+            // showFeedback(formFeedback, '', ''); // Ləğv edildi
+            const formData = { /* ... */ };
+            fetch(GOOGLE_SCRIPT_URL, { method: 'POST', body: JSON.stringify(formData) })
+            .then(response => response.json())
+            .then(result => {
+                if (result.status === 'success') {
+                    // showFeedback(formFeedback, 'success', result.message); // Ləğv edildi
+                    showToast(result.message, 'success'); // YENİ
+                    dataForm.reset();
+                    document.getElementById('muqavileTarixi').type = 'text';
+                    document.getElementById('imzalanmaTarixi').type = 'text';
+                    if(currentState.totalRows > 0) fetchPaginatedData(); 
+                } else {
+                    // showFeedback(formFeedback, 'error', result.message); // Ləğv edildi
+                    showToast(result.message, 'error'); // YENİ
+                }
+            })
+            .catch(error => {
+                // showFeedback(formFeedback, 'error', 'Sistem xətası baş verdi.'); // Ləğv edildi
+                 showToast('Sistem xətası baş verdi. İnternet bağlantınızı yoxlayın.', 'error'); // YENİ
+            })
+            .finally(() => { toggleLoader(submitBtn, false); });
+        });
+
+        // --- ƏSAS MƏLUMAT GƏTİRMƏ FUNKSİYASI (dəyişməyib) ---
+        function fetchPaginatedData() { /* ... */ }
+        
+        // --- Sadə Axtarış Hadisələri (YENİLƏNİB: Axtarış feedback qaldı) ---
+        simpleSearchForm.addEventListener('submit', function(e) {
+             e.preventDefault();
+            currentState.page = 1;
+            
+            if (searchFakturaInput.value.trim() === '' && searchMusteriKoduInput.value.trim() === '') {
+                // Bu xəta axtarış paneli ilə bağlı olduğu üçün qalsın
+                showSearchFeedback('error', 'Axtarış üçün Faktura Nömrəsi və ya Müştəri Kodu daxil edin.'); 
+                return;
+            }
+            
+            toggleLoader(searchBtn, true);
+            fetchPaginatedData();
+            toggleLoader(searchBtn, false);
+        });
+        
+        showAllBtn.addEventListener('click', function() { /* ... */ });
+        
+        // --- Çeşidləmə (Sorting) Hadisələri (dəyişməyib) ---
+        sortableHeaders.forEach(header => { /* ... */ });
+        function updateSortIcons() { /* ... */ }
+
+        // --- Səhifələmə (Pagination) Hadisələri (dəyişməyib) ---
+        prevPageBtn.addEventListener('click', () => { /* ... */ });
+        nextPageBtn.addEventListener('click', () => { /* ... */ });
+        rowsPerPageSelect.addEventListener('change', () => { /* ... */ });
+        function updatePaginationUI() { /* ... */ }
+
+        // --- Nəticələri Göstərən Funksiya (dəyişməyib) ---
+        function displayResults(data) { /* ... */ }
+        
+        // --- Düzəliş Modalı Funksiyaları (dəyişməyib) ---
+        function openEditModal(buttonElement) { /* ... */ }
+        function closeEditModal() { /* ... */ }
+        closeModalBtn.addEventListener('click', closeEditModal);
+        cancelEditBtn.addEventListener('click', closeEditModal);
+        
+        // --- Dəyişiklikləri Yadda Saxlama (YENİLƏNİB: showToast) ---
+        editForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            toggleLoader(saveEditBtn, true);
+            // showFeedback(editFeedback, '', ''); // Ləğv edildi
+            const updatedData = { /* ... */ };
+            fetch(GOOGLE_SCRIPT_URL, { method: 'POST', body: JSON.stringify(updatedData) })
+            .then(response => response.json())
+            .then(result => {
+                if (result.status === 'success') {
+                    // showFeedback(editFeedback, 'success', result.message); // Ləğv edildi
+                    showToast(result.message, 'success'); // YENİ
+                    fetchPaginatedData(); 
+                    setTimeout(closeEditModal, 500); // Daha tez bağla
+                } else {
+                    // showFeedback(editFeedback, 'error', result.message); // Ləğv edildi
+                    showToast(result.message, 'error'); // YENİ
+                }
+            })
+            .catch(error => {
+                // showFeedback(editFeedback, 'error', 'Sistem xətası baş verdi.'); // Ləğv edildi
+                showToast('Sistem xətası baş verdi.', 'error'); // YENİ
+            })
+            .finally(() => { toggleLoader(saveEditBtn, false); });
+        });
+        
+        // --- Silmə Modalı Funksiyaları (dəyişməyib) ---
+        function openConfirmModal(buttonElement) { /* ... */ }
+        function closeConfirmModal() { /* ... */ }
+        closeConfirmBtn.addEventListener('click', closeConfirmModal);
+        cancelDeleteBtn.addEventListener('click', closeConfirmModal);
+
+        // Silmə əməliyyatını icra et (YENİLƏNİB: showToast)
+        confirmDeleteBtn.addEventListener('click', function() {
+            const rowIndex = rowToDeleteInput.value;
+            if (!rowIndex) return;
+            toggleLoader(confirmDeleteBtn, true);
+            const deleteData = { action: 'deleteData', rowIndex: rowIndex };
+            
+            fetch(GOOGLE_SCRIPT_URL, { method: 'POST', body: JSON.stringify(deleteData) })
+            .then(response => response.json())
+            .then(result => {
+                if (result.status === 'success') {
+                    closeConfirmModal();
+                    // showFeedback(deleteFeedback, 'success', result.message); // Ləğv edildi
+                    showToast(result.message, 'success'); // YENİ
+                    if(currentSearchResults.length === 1 && currentState.page > 1) {
+                        currentState.page--;
+                    }
+                    fetchPaginatedData(); 
+                } else {
+                    // showFeedback(deleteFeedback, 'error', result.message); // Ləğv edildi
+                    showToast(result.message, 'error'); // YENİ
+                }
+            })
+            .catch(error => {
+                // showFeedback(deleteFeedback, 'error', 'Sistem xətası baş verdi.'); // Ləğv edildi
+                 showToast('Sistem xətası baş verdi.', 'error'); // YENİ
+            })
+            .finally(() => { toggleLoader(confirmDeleteBtn, false); });
+        });
+
+        // Ümumi pəncərə klikləməsi (dəyişməyib)
+        window.addEventListener('click', function(event) { /* ... */ });
+
+        // --- Köməkçi Funksiyalar (YENİLƏNİB) ---
+        function toggleLoader(button, isLoading) { /* ... */ }
+        
+        // YENİ: Toast bildirişini göstərən funksiya
+        function showToast(message, type = 'success') { // type 'success' və ya 'error' ola bilər
+            clearTimeout(toastTimeout); // Əvvəlki timer-i ləğv et (əgər varsa)
+
+            toastMessageElement.textContent = message;
+            toastElement.className = 'toast'; // Bütün köhnə classları təmizlə
+            toastElement.classList.add(type); // 'success' və ya 'error' classını əlavə et
+            
+            // Görünən et
+            toastElement.classList.add('show');
+
+            // 3 saniyə sonra gizlət
+            toastTimeout = setTimeout(() => {
+                toastElement.classList.remove('show');
+            }, 3000); 
+        }
+        
+        // YENİ: Axtarış feedback funksiyası (yalnız axtarış üçün)
+        function showSearchFeedback(type, message) {
+            searchFeedback.className = '';
+            if (type) {
+                searchFeedback.classList.add(type);
+                searchFeedback.textContent = message;
+                 searchFeedback.style.display = 'flex'; // Göstər
+            } else {
+                 searchFeedback.style.display = 'none'; // Gizlət
+            }
+        }
+        
+        // Tarix formatlama funksiyaları (dəyişməyib)
+        function formatDateForDisplay(dateString) { /* ... */ }
+        function formatDateToYYYYMMDD(dateString) { /* ... */ }
+        function formatDateToDDMMYYYY(dateString) { /* ... */ }
+        
+        // Səhifə yüklənəndə (dəyişməyib)
+        document.addEventListener('DOMContentLoaded', () => { /* ... */ });
+        
+    </script>
+</body>
+</html>
