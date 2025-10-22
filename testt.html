@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Faktura İdarəetmə Sistemi</title>
+    
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap">
+    
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+
+    <style>
+        :root {
+            --primary-color: #005A9C;
+            --secondary-color: #007BFF;
+            --info-color: #17a2b8;
+            --info-hover-color: #138496;
+            --background-color: #f4f7f6;
+            --container-color: #ffffff;
+            --text-color: #333;
+            --text-light-color: #777;
+            --border-color: #e0e0e0;
+            --success-color: #28a745;
+            --error-color: #dc3545;
+            --warning-color: #ffc107;
+            --warning-hover-color: #e0a800;
+            --shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            --shadow-hover: 0 6px 16px rgba(0, 0, 0, 0.1); /* YENİ */
+            --border-radius: 8px;
+            --transition-main: all 0.3s ease; /* YENİ */
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        /* YENİ: İkonlar üçün standart stil */
+        .material-symbols-outlined {
+            vertical-align: middle;
+            font-size: 20px;
+            /* Klik hadisələrinin düyməyə keçməsi üçün */
+            pointer-events: none; 
+        }
+
+        .main-container {
+            width: 100%;
+            max-width: 900px;
+            background-color: var(--container-color);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            animation: fadeIn 0.5s ease-out;
+            transition: var(--transition-main);
+        }
+
+        /* --- NAVİQASİYA (YENİLƏNİB) --- */
+        .tab-nav { display: flex; background-color: var(--primary-color); }
+        .tab-button {
+            flex: 1; padding: 18px; font-size: 16px; font-weight: 500;
+            color: white; background-color: var(--primary-color);
+            border: none; cursor: pointer;
+            transition: var(--transition-main);
+            opacity: 0.7;
+            /* YENİ: Flexbox ikon və mətni mərkəzləmək üçün */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        .tab-button:hover { background-color: var(--secondary-color); opacity: 1; }
+        .tab-button.active {
+            background-color: var(--container-color); color: var(--primary-color);
+            opacity: 1; border-bottom: 3px solid var(--secondary-color);
+        }
+
+        /* --- PANELLƏR VƏ FORMLAR --- */
+        .tab-panel { padding: 30px; display: none; animation: slideIn 0.4s ease-out; }
+        .tab-panel.active { display: block; }
+        h2 { text-align: center; margin-bottom: 25px; color: var(--primary-color); font-weight: 700; }
+        .form-group { margin-bottom: 20px; }
+        .form-row { display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 15px; }
+
+        /* YENİ: İkonlu İnput Qrupu */
+        .input-group {
+            position: relative;
+            flex: 1;
+        }
+        .input-icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-light-color);
+            transition: var(--transition-main);
+            pointer-events: none; /* Kliklərin inputa getməsi üçün */
+        }
+        .form-row input, .form-row select {
+            flex: 1;
+            min-width: 200px;
+            width: 100%; /* Qrupun içində tam en */
+            padding: 12px 15px 12px 45px; /* YENİ: Sol tərəfdə ikon üçün boşluq */
+            font-size: 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            transition: var(--transition-main);
+        }
+        /* YENİ: Fokus animasiyası */
+        .form-row input:focus, .form-row select:focus {
+            outline: none;
+            border-color: var(--secondary-color);
+            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.15);
+        }
+        /* YENİ: İnput fokus olanda ikonun rəngini dəyiş */
+        .form-row input:focus + .input-icon,
+        .form-row select:focus + .input-icon {
+            color: var(--primary-color);
+        }
+        
+        input[type="text"].date-input { color: #333; }
+        input[type="text"].date-input:invalid { color: var(--text-light-color); }
+
+        /* --- DÜYMƏLƏR (YENİLƏNİB) --- */
+        .submit-button {
+            width: 100%; padding: 14px; font-size: 16px; font-weight: 700;
+            color: white; background-color: var(--secondary-color);
+            border: none; border-radius: 6px; cursor: pointer;
+            position: relative;
+            /* YENİ: Flexbox ilə məzmunu mərkəzlə */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--transition-main);
+            box-shadow: var(--shadow); /* YENİ */
+        }
+        .submit-button:hover {
+            background-color: var(--primary-color);
+            /* YENİ: Hover animasiyası */
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-hover);
+        }
+        .submit-button:active {
+            transform: scale(0.99); /* Klikləmə effekti */
+        }
+        .submit-button:disabled {
+            background-color: #aaa;
+            cursor: not-allowed;
+            transform: translateY(0);
+            box-shadow: none;
+        }
+        
+        /* YENİ: Düymə məzmunu (ikon + mətn) */
+        .button-content {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: var(--transition-main);
+        }
+
+        #showAllBtn { background-color: var(--info-color); }
+        #showAllBtn:hover { background-color: var(--info-hover-color); }
+
+        /* YENİ: Yüklənmə (Loader) stili */
+        .loader {
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-top-color: #FFF;
+            border-radius: 50%;
+            display: none; /* Başlanğıcda gizli */
+            animation: rotation 1s linear infinite;
+        }
+        .submit-button.loading .loader { display: block; }
+        .submit-button.loading .button-content { display: none; }
+
+        /* --- GERİ DÖNÜŞ (FEEDBACK) (YENİLƏNİB) --- */
+        #form-feedback, #search-feedback, #edit-feedback {
+            padding: 12px 15px; border-radius: 6px; text-align: left; /* Dəyişdi */
+            font-weight: 500; margin-top: 20px;
+            animation: popIn 0.3s ease-out;
+            /* YENİ: Flexbox ilə ikon əlavə etmək */
+            display: none; /* block-a çevriləcək */
+            align-items: center;
+            gap: 10px;
+        }
+        /* YENİ: İkonları :before ilə əlavə etmə */
+        #form-feedback::before, #search-feedback::before, #edit-feedback::before {
+            font-family: 'Material Symbols Outlined';
+            font-size: 22px;
+            line-height: 1;
+        }
+        .success {
+            background-color: #d4edda; color: #155724;
+            border: 1px solid #c3e6cb; display: flex !important;
+        }
+        .success::before {
+            content: "check_circle"; /* YENİ İkon */
+            color: var(--success-color);
+        }
+        .error {
+            background-color: #f8d7da; color: #721c24;
+            border: 1px solid #f5c6cb; display: flex !important;
+        }
+        .error::before {
+            content: "error"; /* YENİ İkon */
+            color: var(--error-color);
+        }
+        
+        /* --- FİLTR (YENİLƏNİB) --- */
+        #filter-container {
+            margin-top: 20px; padding: 10px 15px; background-color: #f8f9fa;
+            border-radius: 6px; display: none; /* Dəyişdi */
+            align-items: center; gap: 10px;
+        }
+        /* YENİ: Filtr ikonu */
+        #filter-container label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 500;
+        }
+        #personFilter {
+            padding: 8px; border-radius: 4px;
+            border: 1px solid var(--border-color); font-size: 15px;
+        }
+
+        /* --- AXTARIŞ CƏDVƏLİ (YENİLƏNİB) --- */
+        #search-results-container { margin-top: 20px; max-height: 400px; overflow-y: auto; }
+        #results-table { width: 100%; border-collapse: collapse; }
+        #results-table th, #results-table td {
+            border: 1px solid var(--border-color); padding: 12px;
+            text-align: left; font-size: 14px;
+        }
+        #results-table th {
+            background-color: #f8f9fa; color: var(--primary-color);
+            position: sticky; top: 0;
+        }
+        #results-table tr:nth-child(even) { background-color: var(--background-color); }
+        /* YENİ: Cədvəl sətirlərinə hover animasiyası */
+        #results-table tbody tr:hover {
+            background-color: #e9ecef;
+            transition: background-color 0.2s ease;
+        }
+        
+        /* YENİ: Düzəliş düyməsi (İkonlu) */
+        .edit-btn {
+            padding: 6px 10px; font-size: 13px; font-weight: 500;
+            color: white; background-color: var(--warning-color);
+            border: none; border-radius: 4px; cursor: pointer;
+            transition: var(--transition-main);
+            /* YENİ: Flexbox */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+        .edit-btn:hover { background-color: var(--warning-hover-color); }
+        /* YENİ: Düzəliş düyməsindəki ikonun ölçüsü */
+        .edit-btn .material-symbols-outlined {
+            font-size: 18px;
+        }
+
+        /* --- DÜZƏLİŞ MODALI (YENİLƏNİB) --- */
+        .modal {
+            display: none; position: fixed; z-index: 1000;
+            left: 0; top: 0; width: 100%; height: 100%;
+            overflow: auto; background-color: rgba(0, 0, 0, 0.5);
+            animation: fadeIn 0.3s;
+        }
+        .modal-content {
+            background-color: var(--container-color); margin: 10% auto;
+            padding: 30px; border-radius: var(--border-radius);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            width: 90%; max-width: 700px;
+            animation: slideDown 0.4s ease-out;
+        }
+        /* YENİ: Modal Başlığı (İkonlu) */
+        .modal-header {
+            display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 15px; margin-bottom: 20px;
+        }
+        .modal-header h2 {
+            margin: 0; text-align: left;
+            display: flex; /* YENİ */
+            align-items: center; /* YENİ */
+            gap: 10px; /* YENİ */
+        }
+        .close-btn {
+            color: var(--text-light-color); font-size: 32px; font-weight: bold;
+            cursor: pointer; transition: var(--transition-main);
+        }
+        .close-btn:hover, .close-btn:focus { color: var(--text-color); }
+        .modal-buttons { display: flex; gap: 15px; margin-top: 20px; }
+        
+        #cancel-edit-btn { background-color: #6c757d; }
+        #cancel-edit-btn:hover { background-color: #5a6268; }
+        
+        /* YENİ: Yadda saxlama düyməsinin rəngi */
+        #save-edit-btn { background-color: var(--success-color); }
+        #save-edit-btn:hover { background-color: #218838; }
+
+        /* --- ANİMASİYALAR --- */
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+        @keyframes popIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+        @keyframes rotation { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-50px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+
+    <div class="main-container">
+        <nav class="tab-nav">
+            <button class="tab-button active" data-tab="add-data">
+                <span class="material-symbols-outlined">post_add</span>
+                Məlumat Əlavə Et
+            </button>
+            <button class="tab-button" data-tab="search-data">
+                <span class="material-symbols-outlined">search</span>
+                Məlumat Axtar
+            </button>
+        </nav>
+
+        <div id="add-data" class="tab-panel active">
+            <h2>Yeni Faktura Qeydiyyatı</h2>
+            <form id="dataForm">
+                <div class="form-group">
+                    <div class="form-row">
+                        <div class="input-group">
+                            <input type="text" id="fakturaNo" placeholder="Faktura nömrəsi" required>
+                            <span class="material-symbols-outlined input-icon">receipt_long</span>
+                        </div>
+                        <div class="input-group">
+                            <input type="text" id="musteriKodu" placeholder="Müştəri kodu" required>
+                            <span class="material-symbols-outlined input-icon">badge</span>
+                        </div>
+                        <div class="input-group">
+                            <input type="text" id="musteriAd" placeholder="Müştəri ad/soyad" required>
+                            <span class="material-symbols-outlined input-icon">person</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="form-row">
+                        <div class="input-group">
+                            <input type="text" class="date-input"
+                                   onfocus="(this.type='date'); this.value = formatDateToYYYYMMDD(this.value);"
+                                   onblur="(this.type='text'); this.value = formatDateToDDMMYYYY(this.value);"
+                                   id="muqavileTarixi" placeholder="Müqavilə tarixi (GG-AA-İİİİ)" required>
+                            <span class="material-symbols-outlined input-icon">calendar_month</span>
+                        </div>
+                        <div class="input-group">
+                            <input type="text" class="date-input"
+                                   onfocus="(this.type='date'); this.value = formatDateToYYYYMMDD(this.value);"
+                                   onblur="(this.type='text'); this.value = formatDateToDDMMYYYY(this.value);"
+                                   id="imzalanmaTarixi" placeholder="İmzalanma tarixi (GG-AA-İİİİ)" required>
+                            <span class="material-symbols-outlined input-icon">calendar_today</span>
+                        </div>
+                        <div class="input-group">
+                            <select id="imzalayanSexs" required>
+                                <option value="" disabled selected>İmzaladan şəxs...</option>
+                                <option value="Ə.Məleykə">Ə.Məleykə</option>
+                                <option value="M.Arzu">M.Arzu</option>
+                                <option value="Ə.Gülşad">Ə.Gülşad</option>
+                                <option value="H.Aidə">H.Aidə</option>
+                            </select>
+                            <span class="material-symbols-outlined input-icon">draw</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <button type="submit" class="submit-button" id="submitBtn">
+                    <span class="button-content">
+                        <span class="material-symbols-outlined">save</span>
+                        Yaddaşda Saxla
+                    </span>
+                    <span class="loader"></span>
+                </button>
+                <div id="form-feedback"></div>
+            </form>
+        </div>
+
+        <div id="search-data" class="tab-panel">
+            <h2>Məlumat Axtarışı</h2>
+            <form id="searchForm">
+                <div class="form-group">
+                    <div class="form-row">
+                        <div class="input-group" style="flex: 2;">
+                            <input type="text" id="searchFaktura" placeholder="Axtarılacaq faktura nömrəsi...">
+                            <span class="material-symbols-outlined input-icon">search</span>
+                        </div>
+                        
+                        <button type="submit" class="submit-button" id="searchBtn" style="flex: 1;">
+                            <span class="button-content">
+                                <span class="material-symbols-outlined">search</span>
+                                Axtar
+                            </span>
+                            <span class="loader"></span>
+                        </button>
+                        
+                        <button type="button" class="submit-button" id="showAllBtn" style="flex: 1;">
+                            <span class="button-content">
+                                <span class="material-symbols-outlined">list</span>
+                                Hamısını Göstər
+                            </span>
+                            <span class="loader"></span>
+                        </button>
+                    </div>
+                </div>
+                <div id="search-feedback"></div>
+            </form>
+            
+            <div id="filter-container" style="display: none;">
+                <label for="personFilter">
+                    <span class="material-symbols-outlined">filter_list</span>
+                    İmzalayan şəxsə görə filtr:
+                </label>
+                <select id="personFilter">
+                    <option value="all">Hamısı</option>
+                    <option value="Ə.Məleykə">Ə.Məleykə</option>
+                    <option value="M.Arzu">M.Arzu</option>
+                    <option value="Ə.Gülşad">Ə.Gülşad</option>
+                    <option value="H.Aidə">H.Aidə</option>
+                </select>
+            </div>
+            
+            <div id="search-results-container">
+                <table id="results-table" style="display: none;">
+                    <thead>
+                        <tr>
+                            <th>Faktura №</th>
+                            <th>Müştəri Kodu</th>
+                            <th>Müştəri Ad/Soyad</th>
+                            <th>Müqavilə Tarixi</th>
+                            <th>İmzalanma Tarixi</th>
+                            <th>İmzalayan Şəxs</th>
+                            <th>Düzəliş</th>
+                        </tr>
+                    </thead>
+                    <tbody id="results-tbody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>
+                    <span class="material-symbols-outlined" style="font-size: 28px;">edit_note</span>
+                    Məlumata Düzəliş
+                </h2>
+                <span class="close-btn" id="closeModalBtn">&times;</span>
+            </div>
+            <form id="editForm">
+                <input type="hidden" id="editRowIndex">
+                <div class="form-group"><div class="form-row">
+                    <div class="input-group">
+                        <input type="text" id="editFakturaNo" placeholder="Faktura nömrəsi" required>
+                        <span class="material-symbols-outlined input-icon">receipt_long</span>
+                    </div>
+                    <div class="input-group">
+                        <input type="text" id="editMusteriKodu" placeholder="Müştəri kodu" required>
+                        <span class="material-symbols-outlined input-icon">badge</span>
+                    </div>
+                    <div class="input-group">
+                        <input type="text" id="editMusteriAd" placeholder="Müştəri ad/soyad" required>
+                        <span class="material-symbols-outlined input-icon">person</span>
+                    </div>
+                </div></div>
+                <div class="form-group"><div class="form-row">
+                    <div class="input-group">
+                        <input type="text" class="date-input"
+                               onfocus="(this.type='date'); this.value = formatDateToYYYYMMDD(this.value);"
+                               onblur="(this.type='text'); this.value = formatDateToDDMMYYYY(this.value);"
+                               id="editMuqavileTarixi" placeholder="Müqavilə tarixi (GG-AA-İİİİ)" required>
+                        <span class="material-symbols-outlined input-icon">calendar_month</span>
+                    </div>
+                    <div class="input-group">
+                        <input type="text" class="date-input"
+                               onfocus="(this.type='date'); this.value = formatDateToYYYYMMDD(this.value);"
+                               onblur="(this.type='text'); this.value = formatDateToDDMMYYYY(this.value);"
+                               id="editImzalanmaTarixi" placeholder="İmzalanma tarixi (GG-AA-İİİİ)" required>
+                        <span class="material-symbols-outlined input-icon">calendar_today</span>
+                    </div>
+                    <div class="input-group">
+                        <select id="editImzalayanSexs" required>
+                            <option value="Ə.Məleykə">Ə.Məleykə</option>
+                            <option value="M.Arzu">M.Arzu</option>
+                            <option value="Ə.Gülşad">Ə.Gülşad</option>
+                            <option value="H.Aidə">H.Aidə</option>
+                        </select>
+                        <span class="material-symbols-outlined input-icon">draw</span>
+                    </div>
+                </div></div>
+                <div class="modal-buttons">
+                    <button type="button" class="submit-button" id="cancel-edit-btn">
+                        <span class="button-content">
+                            <span class="material-symbols-outlined">cancel</span>
+                            Ləğv Et
+                        </span>
+                        <span class="loader"></span>
+                    </button>
+                    <button type="submit" class="submit-button" id="save-edit-btn">
+                        <span class="button-content">
+                            <span class="material-symbols-outlined">check_circle</span>
+                            Dəyişikliyi Yadda Saxla
+                        </span>
+                        <span class="loader"></span>
+                    </button>
+                </div>
+                <div id="edit-feedback"></div>
+            </form>
+        </div>
+    </div>
+    <script>
+        // --- Vacib Dəyişən ---
+        const GOOGLE_SCRIPT_URL = 'SİZİN_URL_BURADA_OLMALIDIR';
+
+        // --- Elementləri seçirik (dəyişməyib) ---
+        const tabButtons = document.querySelectorAll('.tab-button');
+        const tabPanels = document.querySelectorAll('.tab-panel');
+        const dataForm = document.getElementById('dataForm');
+        const submitBtn = document.getElementById('submitBtn');
+        const formFeedback = document.getElementById('form-feedback');
+        const searchForm = document.getElementById('searchForm');
+        const searchInput = document.getElementById('searchFaktura');
+        const searchBtn = document.getElementById('searchBtn');
+        const showAllBtn = document.getElementById('showAllBtn');
+        const searchFeedback = document.getElementById('search-feedback');
+        const resultsTable = document.getElementById('results-table');
+        const resultsTbody = document.getElementById('results-tbody');
+        const personFilterContainer = document.getElementById('filter-container');
+        const personFilter = document.getElementById('personFilter');
+        const editModal = document.getElementById('editModal');
+        const editForm = document.getElementById('editForm');
+        const saveEditBtn = document.getElementById('save-edit-btn');
+        const cancelEditBtn = document.getElementById('cancel-edit-btn');
+        const closeModalBtn = document.getElementById('closeModalBtn');
+        const editFeedback = document.getElementById('edit-feedback');
+        let currentSearchResults = [];
+
+        // --- Menyuların İdarə Olunması (dəyişməyib) ---
+        tabButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                tabButtons.forEach(btn => btn.classList.remove('active'));
+                button.classList.add('active');
+                const targetPanelId = button.getAttribute('data-tab');
+                tabPanels.forEach(panel => panel.classList.remove('active'));
+                document.getElementById(targetPanelId).classList.add('active');
+            });
+        });
+
+        // --- Məlumat Göndərmə (Yaddaşda Saxlama) (dəyişməyib) ---
+        dataForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            toggleLoader(submitBtn, true);
+            showFeedback(formFeedback, '', '');
+            
+            const formData = {
+                action: 'writeData',
+                fakturaNo: document.getElementById('fakturaNo').value,
+                musteriKodu: document.getElementById('musteriKodu').value,
+                musteriAd: document.getElementById('musteriAd').value,
+                muqavileTarixi: formatDateToYYYYMMDD(document.getElementById('muqavileTarixi').value),
+                imzalanmaTarixi: formatDateToYYYYMMDD(document.getElementById('imzalanmaTarixi').value),
+                imzalayanSexs: document.getElementById('imzalayanSexs').value
+            };
+            
+            fetch(GOOGLE_SCRIPT_URL, { method: 'POST', body: JSON.stringify(formData) })
+            .then(response => response.json())
+            .then(result => {
+                if (result.status === 'success') {
+                    showFeedback(formFeedback, 'success', result.message);
+                    dataForm.reset();
+                    // Tarix xanalarını text-ə qaytar
+                    document.getElementById('muqavileTarixi').type = 'text';
+                    document.getElementById('imzalanmaTarixi').type = 'text';
+                } else {
+                    showFeedback(formFeedback, 'error', 'XƏTA: ' + result.message);
+                }
+            })
+            .catch(error => {
+                console.error('Göndərmə xətası:', error);
+                showFeedback(formFeedback, 'error', 'Sistem xətası baş verdi. İnternet bağlantınızı yoxlayın.');
+            })
+            .finally(() => { toggleLoader(submitBtn, false); });
+        });
+
+        // --- Məlumat Axtarışı (dəyişməyib) ---
+        searchForm.addEventListener('submit', function(e) {
+            e.preventDefault(); 
+            const fakturaToSearch = searchInput.value.trim();
+            if (!fakturaToSearch) {
+                showFeedback(searchFeedback, 'error', 'Zəhmət olmasa, axtarış üçün faktura nömrəsi daxil edin.');
+                return; 
+            }
+            performFetch({ action: 'searchData', fakturaNo: fakturaToSearch }, searchBtn);
+        });
+
+        // --- Hamısını Göstər düyməsi (dəyişməyib) ---
+        showAllBtn.addEventListener('click', function() {
+            searchInput.value = ''; 
+            performFetch({ action: 'getAllData' }, showAllBtn);
+        });
+
+        // --- Ümumi Axtarış Funksiyası (dəyişməyib) ---
+        function performFetch(payload, buttonElement) {
+            toggleLoader(buttonElement, true);
+            showFeedback(searchFeedback, '', ''); 
+            resultsTable.style.display = 'none';
+            resultsTbody.innerHTML = '';
+            personFilterContainer.style.display = 'none'; 
+            currentSearchResults = []; 
+
+            fetch(GOOGLE_SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) })
+            .then(response => response.json())
+            .then(result => {
+                if (result.status === 'success') {
+                    if (result.data && result.data.length > 0) {
+                        currentSearchResults = result.data; 
+                        displayResults(currentSearchResults); 
+                        personFilter.value = 'all'; 
+                        personFilterContainer.style.display = 'flex'; 
+                        showFeedback(searchFeedback, 'success', `${result.data.length} nəticə tapıldı.`);
+                    } else {
+                        showFeedback(searchFeedback, 'error', 'Heç bir məlumat tapılmadı.');
+                        personFilterContainer.style.display = 'none'; 
+                    }
+                } else {
+                    showFeedback(searchFeedback, 'error', 'XƏTA: ' + result.message);
+                }
+            })
+            .catch(error => {
+                console.error('Axtarış/Gətirmə xətası:', error);
+                showFeedback(searchFeedback, 'error', 'Sistem xətası baş verdi.');
+            })
+            .finally(() => {
+                toggleLoader(buttonElement, false);
+            });
+        }
+        
+        // --- Filtr Hadisəsi (dəyişməyib) ---
+        personFilter.addEventListener('change', () => {
+            const selectedValue = personFilter.value;
+            if (selectedValue === 'all') {
+                displayResults(currentSearchResults); 
+            } else {
+                const filteredData = currentSearchResults.filter(row => row.imzalayanSexs === selectedValue);
+                displayResults(filteredData); 
+            }
+        });
+
+        // --- Nəticələri Göstərən Funksiya (YENİLƏNİB) ---
+        function displayResults(data) {
+            resultsTbody.innerHTML = '';
+            data.forEach(row => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${row.fakturaNo}</td>
+                    <td>${row.musteriKodu}</td>
+                    <td>${row.musteriAd}</td>
+                    <td>${formatDateForDisplay(row.muqavileTarixi)}</td>
+                    <td>${formatDateForDisplay(row.imzalanmaTarixi)}</td>
+                    <td>${row.imzalayanSexs}</td>
+                    <td>
+                        <button class="edit-btn" data-row-index="${row.rowIndex}">
+                            <span class="material-symbols-outlined">edit</span>
+                            Düzəliş
+                        </button>
+                    </td>
+                `;
+                resultsTbody.appendChild(tr);
+            });
+            resultsTable.style.display = 'table';
+            
+            // YENİ: Klik hadisəsi birbaşa düyməyə əlavə edilir (içindəki ikona yox)
+            resultsTbody.querySelectorAll('.edit-btn').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    // e.currentTarget hər zaman düymənin özü olacaq
+                    openEditModal(e.currentTarget); 
+                });
+            });
+        }
+        
+        // --- Düzəliş Modalı Funksiyaları (YENİLƏNİB) ---
+        // Funksiya artıq 'event' (e) yox, birbaşa 'buttonElement' qəbul edir
+        function openEditModal(buttonElement) {
+            const rowIndex = buttonElement.getAttribute('data-row-index');
+            const dataToEdit = currentSearchResults.find(item => item.rowIndex == rowIndex);
+            if (!dataToEdit) { alert('Məlumat tapılmadı.'); return; }
+            
+            document.getElementById('editRowIndex').value = dataToEdit.rowIndex;
+            document.getElementById('editFakturaNo').value = dataToEdit.fakturaNo;
+            document.getElementById('editMusteriKodu').value = dataToEdit.musteriKodu;
+            document.getElementById('editMusteriAd').value = dataToEdit.musteriAd;
+            document.getElementById('editMuqavileTarixi').value = formatDateForDisplay(dataToEdit.muqavileTarixi);
+            document.getElementById('editImzalanmaTarixi').value = formatDateForDisplay(dataToEdit.imzalanmaTarixi);
+            document.getElementById('editImzalayanSexs').value = dataToEdit.imzalayanSexs;
+            
+            showFeedback(editFeedback, '', '');
+            editModal.style.display = 'block';
+        }
+
+        function closeEditModal() { 
+            editModal.style.display = 'none'; 
+            document.getElementById('editMuqavileTarixi').type = 'text';
+            document.getElementById('editImzalanmaTarixi').type = 'text';
+        }
+        closeModalBtn.addEventListener('click', closeEditModal);
+        cancelEditBtn.addEventListener('click', closeEditModal);
+        window.addEventListener('click', function(event) {
+            if (event.target == editModal) { closeEditModal(); }
+        });
+        
+        // --- Dəyişiklikləri Yadda Saxlama (dəyişməyib) ---
+        editForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            toggleLoader(saveEditBtn, true);
+            showFeedback(editFeedback, '', '');
+            const updatedData = {
+                action: 'updateData',
+                rowIndex: document.getElementById('editRowIndex').value,
+                fakturaNo: document.getElementById('editFakturaNo').value,
+                musteriKodu: document.getElementById('editMusteriKodu').value,
+                musteriAd: document.getElementById('editMusteriAd').value,
+                muqavileTarixi: formatDateToYYYYMMDD(document.getElementById('editMuqavileTarixi').value),
+                imzalanmaTarixi: formatDateToYYYYMMDD(document.getElementById('editImzalanmaTarixi').value),
+                imzalayanSexs: document.getElementById('editImzalayanSexs').value
+            };
+            fetch(GOOGLE_SCRIPT_URL, { method: 'POST', body: JSON.stringify(updatedData) })
+            .then(response => response.json())
+            .then(result => {
+                if (result.status === 'success') {
+                    showFeedback(editFeedback, 'success', result.message + ' Cədvəli yeniləyin.');
+                    resultsTbody.innerHTML = '';
+                    resultsTable.style.display = 'none';
+                    personFilterContainer.style.display = 'none'; 
+                    currentSearchResults = [];
+                    setTimeout(closeEditModal, 2000);
+                } else {
+                    showFeedback(editFeedback, 'error', 'XƏTA: ' + result.message);
+                }
+            })
+            .catch(error => {
+                console.error('Yeniləmə xətası:', error);
+                showFeedback(editFeedback, 'error', 'Sistem xətası baş verdi.');
+            })
+            .finally(() => { toggleLoader(saveEditBtn, false); });
+        });
+
+        // --- Köməkçi Funksiyalar (YENİLƏNİB) ---
+        // toggleLoader (YENİDƏN DİZAYN EDİLDİ)
+        function toggleLoader(button, isLoading) {
+            button.disabled = isLoading;
+            button.classList.toggle('loading', isLoading);
+        }
+        
+        function showFeedback(element, type, message) {
+            element.className = '';
+            if (type) {
+                element.classList.add(type);
+                element.textContent = message;
+            } else {
+                element.style.display = 'none'; // 'display' idarəetməsi .success/.error classları ilə edilir
+            }
+        }
+        
+        function formatDateForDisplay(dateString) {
+            if (!dateString) return '';
+            try {
+                const date = new Date(dateString);
+                const day = date.getDate().toString().padStart(2, '0');
+                const month = (date.getMonth() + 1).toString().padStart(2, '0');
+                const year = date.getFullYear();
+                return `${day}-${month}-${year}`;
+            } catch (e) { return dateString; }
+        }
+        
+        function formatDateToYYYYMMDD(dateString) {
+            if (!dateString || dateString.includes('-') === false) return dateString; 
+            const parts = dateString.split('-');
+            if (parts.length === 3 && parts[0].length === 4) return dateString; 
+            if (parts.length === 3 && parts[2].length === 4) {
+                return `${parts[2]}-${parts[1]}-${parts[0]}`;
+            }
+            return dateString;
+        }
+        
+        function formatDateToDDMMYYYY(dateString) {
+            if (!dateString || dateString.includes('-') === false) return dateString;
+            const parts = dateString.split('-');
+            if (parts.length === 3 && parts[2].length === 4) return dateString;
+            if (parts.length === 3 && parts[0].length === 4) {
+                return `${parts[2]}-${parts[1]}-${parts[0]}`;
+            }
+            return dateString;
+        }
+    </script>
+</body>
+</html>
