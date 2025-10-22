@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Faktura İdarəetmə Sistemi (v16)</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+
+    <style>
+        :root {
+            --primary-color: #005A9C; --secondary-color: #007BFF;
+            --info-color: #17a2b8; --info-hover-color: #138496;
+            --background-color: #f4f7f6; --container-color: #ffffff;
+            --text-color: #333; --text-light-color: #777;
+            --border-color: #e0e0e0; --success-color: #28a745;
+            --error-color: #dc3545; --error-hover-color: #c82333;
+            --warning-color: #ffc107; --warning-hover-color: #e0a800;
+            --shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            --shadow-hover: 0 6px 16px rgba(0, 0, 0, 0.1);
+            --border-radius: 8px; --transition-main: all 0.3s ease;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Roboto', sans-serif; background-color: var(--background-color);
+            color: var(--text-color); display: flex; justify-content: center;
+            align-items: center; min-height: 100vh; padding: 20px;
+        }
+        .material-symbols-outlined { vertical-align: middle; font-size: 20px; pointer-events: none; }
+        .main-container {
+            width: 100%; max-width: 1100px; background-color: var(--container-color);
+            border-radius: var(--border-radius); box-shadow: var(--shadow);
+            overflow: hidden; animation: fadeIn 0.5s ease-out;
+            transition: var(--transition-main);
+        }
+        .tab-nav { display: flex; background-color: var(--primary-color); }
+        .tab-button {
+            flex: 1; padding: 18px; font-size: 16px; font-weight: 500;
+            color: white; background-color: var(--primary-color);
+            border: none; cursor: pointer; transition: var(--transition-main);
+            opacity: 0.7; display: flex; align-items: center;
+            justify-content: center; gap: 8px;
+        }
+        .tab-button:hover { background-color: var(--secondary-color); opacity: 1; }
+        .tab-button.active {
+            background-color: var(--container-color); color: var(--primary-color);
+            opacity: 1; border-bottom: 3px solid var(--secondary-color);
+        }
+        .tab-panel { padding: 30px; display: none; animation: slideIn 0.4s ease-out; }
+        .tab-panel.active { display: block; }
+        h2 { text-align: center; margin-bottom: 25px; color: var(--primary-color); font-weight: 700; }
+        .form-group { margin-bottom: 20px; }
+        .form-row { display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 15px; }
+        .input-group { position: relative; flex: 1; }
+        .input-icon {
+            position: absolute; left: 12px; top: 50%;
+            transform: translateY(-50%); color: var(--text-light-color);
+            transition: var(--transition-main); pointer-events: none;
+        }
+        .form-row input, .form-row select {
+            flex: 1; min-width: 200px; width: 100%;
+            padding: 12px 15px 12px 45px; font-size: 15px;
+            border: 1px solid var(--border-color); border-radius: 6px;
+            transition: var(--transition-main);
+            background-color: white; /* Flatpickr üçün */
+        }
+        .form-row input:focus, .form-row select:focus {
+            outline: none; border-color: var(--secondary-color);
+            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.15);
+        }
+        .form-row input:focus + .input-icon,
+        .form-row select:focus + .input-icon { color: var(--primary-color); }
+
+        input.flatpickr-input { cursor: pointer; }
+        .flatpickr-calendar {
+            box-shadow: var(--shadow-hover);
+            border-radius: var(--border-radius);
+            border: 1px solid var(--border-color);
+        }
+        .flatpickr-day.selected { background: var(--primary-color); border-color: var(--primary-color); }
+        .flatpickr-day.today { border-color: var(--secondary-color); }
+        .flatpickr-day:hover { background: #e9ecef; border-color: #e9ecef; }
+
+        .submit-button {
+            width: 100%; padding: 14px; font-size: 16px; font-weight: 700;
+            color: white; background-color: var(--secondary-color);
+            border: none; border-radius: 6px; cursor: pointer;
+            position: relative; display: flex; align-items: center;
+            justify-content: center; transition: var(--transition-main);
+            box-shadow: var(--shadow);
+        }
+        .submit-button:hover {
+            background-color: var(--primary-color);
+            transform: translateY(-2px); box-shadow: var(--shadow-hover);
+        }
+        .submit-button:active { transform: scale(0.99); }
+        .submit-button:disabled {
+            background-color: #aaa; cursor: not-allowed;
+            transform: translateY(0); box-shadow: none;
+        }
+        .button-content { display: flex; align-items: center; gap: 8px; transition: var(--transition-main); }
+
+        .loader {
+            width: 20px; height: 20px; border: 3px solid rgba(255,255,255,0.3);
+            border-top-color: #FFF; border-radius: 50%;
+            display: none; animation: rotation 1s linear infinite;
+        }
+        .submit-button.loading .loader { display: block; }
+        .submit-button.loading .button-content { display: none; }
+
+        #search-feedback {
+            padding: 12px 15px; border-radius: 6px; text-align: left;
+            font-weight: 500; margin-top: 20px;
+            animation: popIn 0.3s ease-out;
+            display: none; align-items: center; gap: 10px;
+        }
+         #search-feedback::before { font-family: 'Material Symbols Outlined'; font-size: 22px; line-height: 1; }
+        .success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; display: flex !important; }
+        .success::before { content: "check_circle"; color: var(--success-color); }
+        .error { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; display: flex !important; }
+        .error::before { content: "error"; color: var(--error-color); }
+
+        #simple-search-form { background-color: #f8f9fa; border: 1px solid var(--border-color); border-radius: var(--border-radius); padding: 20px; }
+        #simple-search-form .form-row { margin-bottom: 0; align-items: center; }
+        #simple-search-form .input-group { flex: 2; }
+        #simple-search-form .input-group input { padding: 12px 15px 12px 45px; font-size: 15px; }
+        #simple-search-form .submit-button { flex: 1; }
+        #showAllBtn { background-color: var(--info-color); }
+        #showAllBtn:hover { background-color: var(--info-hover-color); }
+
+        #search-results-container { margin-top: 20px; min-height: 200px; position: relative; overflow-x: auto; }
+        #table-loader-overlay {
+            position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            background-color: rgba(255, 255, 255, 0.7);
+            z-index: 10; display: none;
+            align-items: center; justify-content: center;
+        }
+        #table-loader-overlay .loader { display: block; width: 40px; height: 40px; border-color: rgba(0,0,0,0.2); border-top-color: var(--primary-color); }
+        #results-table { width: 100%; border-collapse: collapse; }
+        #results-table th, #results-table td { border: 1px solid var(--border-color); padding: 12px; text-align: left; font-size: 14px; }
+        #results-table th { background-color: #f8f9fa; color: var(--primary-color); position: sticky; top: 0; white-space: nowrap; }
+        #results-table tbody tr:hover { background-color: #e9ecef; transition: background-color 0.2s ease; }
+
+        .sortable-header { cursor: pointer; user-select: none; position: relative; padding-right: 25px; }
+        .header-content { display: inline-flex; align-items: center; gap: 6px; }
+        .header-content .material-symbols-outlined { font-size: 18px; color: var(--primary-color); pointer-events: none; vertical-align: text-bottom; }
+        .sortable-header .sort-icon { position: absolute; right: 5px; top: 50%; transform: translateY(-50%); font-size: 16px; color: var(--text-light-color); transition: var(--transition-main); pointer-events: none; }
+        .sortable-header:hover { background-color: #e9ecef; }
+        .sortable-header.sorted .sort-icon { color: var(--primary-color); }
+
+        #operations-header-content { display: inline-flex; align-items: center; gap: 6px; }
+        #operations-header-content .material-symbols-outlined { font-size: 18px; color: var(--primary-color); vertical-align: text-bottom; }
+
+        .action-buttons { display: flex; gap: 8px; }
+        .action-buttons button { padding: 6px 10px; font-size: 13px; font-weight: 500; color: white; border: none; border-radius: 4px; cursor: pointer; transition: var(--transition-main); display: flex; align-items: center; justify-content: center; gap: 6px; }
+        .action-buttons button .material-symbols-outlined { font-size: 18px; }
+        .edit-btn { background-color: var(--warning-color); }
+        .edit-btn:hover { background-color: var(--warning-hover-color); }
+        .delete-btn { background-color: var(--error-color); }
+        .delete-btn:hover { background-color: var(--error-hover-color); }
+
+        #pagination-controls { display: flex; justify-content: space-between; align-items: center; padding: 15px; border-top: 1px solid var(--border-color); background-color: #f8f9fa; }
+        .pagination-group { display: flex; align-items: center; gap: 10px; }
+        #pagination-status { font-size: 14px; font-weight: 500; color: var(--text-light-color); }
+        #rowsPerPageSelect { padding: 8px; border-radius: 4px; border: 1px solid var(--border-color); font-size: 14px; }
+        .pagination-nav button { background: none; border: 1px solid var(--border-color); background-color: white; padding: 8px; border-radius: 4px; cursor: pointer; transition: var(--transition-main); }
+        .pagination-nav button:hover { background-color: #e9ecef; }
+        .pagination-nav button:disabled { opacity: 0.5; cursor: not-allowed; background-color: #f8f9fa; }
+        .pagination-nav button .material-symbols-outlined { font-size: 24px; }
+
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0, 0, 0, 0.5); animation: fadeIn 0.3s; }
+        .modal-content { background-color: var(--container-color); margin: 15% auto; padding: 30px; border-radius: var(--border-radius); box-shadow: 0 5px 15px rgba(0,0,0,0.3); width: 90%; max-width: 500px; animation: slideDown 0.4s ease-out; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 15px; margin-bottom: 20px; }
+        .modal-header h2 { margin: 0; text-align: left; display: flex; align-items: center; gap: 10px; }
+        .close-btn { color: var(--text-light-color); font-size: 32px; font-weight: bold; cursor: pointer; transition: var(--transition-main); }
+        .close-btn:hover, .close-btn:focus { color: var(--text-color); }
+        .modal-buttons { display: flex; gap: 15px; margin-top: 25px; }
+        #editModal .modal-content { max-width: 700px; margin: 10% auto; }
+        #cancel-edit-btn { background-color: #6c757d; }
+        #cancel-edit-btn:hover { background-color: #5a6268; }
+        #save-edit-btn { background-color: var(--success-color); }
+        #save-edit-btn:hover { background-color: #218838; }
+        #confirmModal .modal-header h2 { color: var(--error-color); }
+        #confirm-message { font-size: 16px; line-height: 1.5; text-align: center; }
+        #confirmDeleteBtn { background-color: var(--error-color); }
+        #confirmDeleteBtn:hover { background-color: var(--error-hover-color); }
+
+        .toast { position: fixed; top: 20px; right: 20px; background-color: #333; color: white; padding: 15px 20px; border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 1050; opacity: 0; visibility: hidden; transition: opacity 0.5s, visibility 0.5s, transform 0.5s ease; transform: translateX(100%); display: flex; align-items: center; gap: 10px; }
+        .toast.show { opacity: 1; visibility: visible; transform: translateX(0); }
+        .toast.success { background-color: var(--success-color); }
+        .toast.error { background-color: var(--error-color); }
+        .toast::before { font-family: 'Material Symbols Outlined'; font-size: 22px; line-height: 1; }
+        .toast.success::before { content: "check_circle"; }
+        .toast.error::before { content: "error"; }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+        @keyframes popIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+        @keyframes rotation { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-50px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+
+    <div class="main-container">
+        <nav class="tab-nav">
+            <button class="tab-button active" data-tab="add-data">
+                <span class="material-symbols-outlined">add_circle</span> Məlumat Əlavə Et
+            </button>
+            <button class="tab-button" data-tab="search-data">
+                <span class="material-symbols-outlined">database</span> Məlumat Bazası
+            </button>
+        </nav>
+
+        <div id="add-data" class="tab-panel active">
+             <h2>Yeni Faktura Qeydiyyatı</h2>
+            <form id="dataForm">
+                 <div class="form-group"> <div class="form-row">
+                    <div class="input-group">
+                        <input type="text" id="fakturaNo" placeholder="Faktura nömrəsi" required>
+                        <span class="material-symbols-outlined input-icon">receipt_long</span>
+                    </div>
+                    <div class="input-group">
+                        <input type="text" id="musteriKodu" placeholder="Müştəri kodu" required>
+                        <span class="material-symbols-outlined input-icon">badge</span>
+                    </div>
+                    <div class="input-group">
+                        <input type="text" id="musteriAd" placeholder="Müştəri ad/soyad" required>
+                        <span class="material-symbols-outlined input-icon">person</span>
+                    </div>
+                </div> </div>
+                <div class="form-group"> <div class="form-row">
+                    <div class="input-group">
+                        <input type="text" class="flatpickr-input"
+                               id="muqavileTarixi" placeholder="Müqavilə tarixi seçin..." required>
+                        <span class="material-symbols-outlined input-icon">calendar_month</span>
+                    </div>
+                    <div class="input-group">
+                        <input type="text" class="flatpickr-input"
+                               id="imzalanmaTarixi" placeholder="İmzalanma tarixi seçin..." required>
+                        <span class="material-symbols-outlined input-icon">calendar_today</span>
+                    </div>
+                    <div class="input-group">
+                        <select id="imzalayanSexs" required>
+                            <option value="" disabled selected>İmzaladan şəxs...</option>
+                            <option value="Ə.Məleykə">Ə.Məleykə</option>
+                            <option value="M.Arzu">M.Arzu</option>
+                            <option value="Ə.Gülşad">Ə.Gülşad</option>
+                            <option value="H.Aidə">H.Aidə</option>
+                        </select>
+                        <span class="material-symbols-outlined input-icon">draw</span>
+                    </div>
+                </div> </div>
+                <button type="submit" class="submit-button" id="submitBtn">
+                    <span class="button-content"><span class="material-symbols-outlined">save</span> Yaddaşda Saxla</span>
+                    <span class="loader"></span>
+                </button>
+            </form>
+        </div>
+
+        <div id="search-data" class="tab-panel">
+            <h2>Məlumat Bazası</h2>
+            <form id="simple-search-form">
+                <div class="form-row">
+                    <div class="input-group">
+                        <input type="text" id="searchFaktura" placeholder="Faktura nömrəsi ilə axtar...">
+                        <span class="material-symbols-outlined input-icon">receipt_long</span>
+                    </div>
+                    <div class="input-group">
+                        <input type="text" id="searchMusteriKodu" placeholder="Müştəri kodu ilə axtar...">
+                        <span class="material-symbols-outlined input-icon">badge</span>
+                    </div>
+                    <button type="submit" class="submit-button" id="searchBtn">
+                        <span class="button-content"><span class="material-symbols-outlined">search</span> Axtar</span>
+                        <span class="loader"></span>
+                    </button>
+                    <button type="button" class="submit-button" id="showAllBtn">
+                        <span class="button-content"><span class="material-symbols-outlined">list</span> Hamısını Göstər</span>
+                        <span class="loader"></span>
+                    </button>
+                </div>
+                <div id="search-feedback"></div>
+            </form>
+
+            <div id="search-results-container">
+                <div id="table-loader-overlay"> <span class="loader"></span> </div>
+                <table id="results-table">
+                    <thead>
+                        <tr>
+                            <th class="sortable-header" data-column-index="0"> <span class="header-content"><span class="material-symbols-outlined">receipt_long</span><span>Faktura №</span></span> <span class="material-symbols-outlined sort-icon">unfold_more</span> </th>
+                            <th class="sortable-header" data-column-index="1"> <span class="header-content"><span class="material-symbols-outlined">badge</span><span>Müştəri Kodu</span></span> <span class="material-symbols-outlined sort-icon">unfold_more</span> </th>
+                            <th class="sortable-header" data-column-index="2"> <span class="header-content"><span class="material-symbols-outlined">person</span><span>Müştəri Ad/Soyad</span></span> <span class="material-symbols-outlined sort-icon">unfold_more</span> </th>
+                            <th class="sortable-header" data-column-index="3"> <span class="header-content"><span class="material-symbols-outlined">calendar_month</span><span>Müqavilə Tarixi</span></span> <span class="material-symbols-outlined sort-icon">unfold_more</span> </th>
+                            <th class="sortable-header" data-column-index="4"> <span class="header-content"><span class="material-symbols-outlined">calendar_today</span><span>İmzalanma Tarixi</span></span> <span class="material-symbols-outlined sort-icon">unfold_more</span> </th>
+                            <th class="sortable-header" data-column-index="5"> <span class="header-content"><span class="material-symbols-outlined">draw</span><span>İmzalayan Şəxs</span></span> <span class="material-symbols-outlined sort-icon">unfold_more</span> </th>
+                            <th> <span id="operations-header-content"><span class="material-symbols-outlined">build</span><span>Əməliyyatlar</span></span> </th>
+                        </tr>
+                    </thead>
+                    <tbody id="results-tbody"> <tr><td colspan="7" style="text-align: center; padding: 30px; color: var(--text-light-color);">Zəhmət olmasa, axtarış edin və ya "Hamısını Göstər" düyməsini basın.</td></tr> </tbody>
+                </table>
+            </div>
+
+            <div id="pagination-controls">
+                <div class="pagination-group">
+                    <label for="rowsPerPageSelect" style="font-weight: 500;">Səhifədə sətir:</label>
+                    <select id="rowsPerPageSelect">
+                        <option value="10">10</option>
+                        <option value="20">20</option>
+                        <option value="50">50</option>
+                        <option value="100">100</option>
+                    </select>
+                </div>
+                <div class="pagination-group">
+                    <span id="pagination-status">0 nəticə</span>
+                    <div class="pagination-nav">
+                        <button id="prevPageBtn" disabled> <span class="material-symbols-outlined">chevron_left</span> </button>
+                        <button id="nextPageBtn" disabled> <span class="material-symbols-outlined">chevron_right</span> </button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><span class="material-symbols-outlined" style="font-size: 28px;">edit_note</span> Məlumata Düzəliş</h2>
+                <span class="close-btn" id="closeModalBtn">&times;</span>
+            </div>
+            <form id="editForm">
+                <input type="hidden" id="editRowIndex">
+                <div class="form-group"><div class="form-row">
+                    <div class="input-group"><input type="text" id="editFakturaNo" placeholder="Faktura nömrəsi" required><span class="material-symbols-outlined input-icon">receipt_long</span></div>
+                    <div class="input-group"><input type="text" id="editMusteriKodu" placeholder="Müştəri kodu" required><span class="material-symbols-outlined input-icon">badge</span></div>
+                    <div class="input-group"><input type="text" id="editMusteriAd" placeholder="Müştəri ad/soyad" required><span class="material-symbols-outlined input-icon">person</span></div>
+                </div></div>
+                <div class="form-group"><div class="form-row">
+                    <div class="input-group"><input type="text" class="flatpickr-input" id="editMuqavileTarixi" placeholder="Müqavilə tarixi seçin..." required><span class="material-symbols-outlined input-icon">calendar_month</span></div>
+                    <div class="input-group"><input type="text" class="flatpickr-input" id="editImzalanmaTarixi" placeholder="İmzalanma tarixi seçin..." required><span class="material-symbols-outlined input-icon">calendar_today</span></div>
+                    <div class="input-group"><select id="editImzalayanSexs" required><option value="Ə.Məleykə">Ə.Məleykə</option><option value="M.Arzu">M.Arzu</option><option value="Ə.Gülşad">Ə.Gülşad</option><option value="H.Aidə">H.Aidə</option></select><span class="material-symbols-outlined input-icon">draw</span></div>
+                </div></div>
+                <div class="modal-buttons">
+                    <button type="button" class="submit-button" id="cancel-edit-btn"><span class="button-content"><span class="material-symbols-outlined">cancel</span> Ləğv Et</span><span class="loader"></span></button>
+                    <button type="submit" class="submit-button" id="save-edit-btn"><span class="button-content"><span class="material-symbols-outlined">check_circle</span> Dəyişikliyi Yadda Saxla</span><span class="loader"></span></button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <div id="confirmModal" class="modal">
+         <div class="modal-content">
+            <div class="modal-header">
+                <h2><span class="material-symbols-outlined" style="font-size: 28px;">warning</span> Silmə Təsdiqi</h2>
+                <span class="close-btn" id="closeConfirmBtn">&times;</span>
+            </div>
+            <input type="hidden" id="rowToDelete">
+            <p id="confirm-message">Bu əməliyyat geri qaytarıla bilməz. Məlumatı silməyə əminsinizmi?</p>
+            <div class="modal-buttons">
+                <button type="button" class="submit-button" id="cancelDeleteBtn" style="background-color: #6c757d;"> <span class="button-content"><span class="material-symbols-outlined">cancel</span> Ləğv Et</span> <span class="loader"></span> </button>
+                <button type="button" class="submit-button" id="confirmDeleteBtn"> <span class="button-content"><span class="material-symbols-outlined">delete_forever</span> Bəli, Sil</span> <span class="loader"></span> </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast-notification" class="toast">
+        <span id="toast-message"></span>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://npmcdn.com/flatpickr/dist/l10n/az.js"></script>
+
+    <script>
+        // --- Vacib Dəyişən ---
+        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzmx9N9XLc0tHKTr62xf47MnpblK_CVZAqCVDzh-_Gsp7pjHvMMOijL4M3xh-zz02Sdjg/exec'; // <<<<<<< BURAYA ÖZ URL-inizi YAPIŞDIRIN!
+
+        // --- Elementləri seçirik ---
+        const tabButtons = document.querySelectorAll('.tab-button');
+        const tabPanels = document.querySelectorAll('.tab-panel');
+        const dataForm = document.getElementById('dataForm');
+        const submitBtn = document.getElementById('submitBtn');
+        const simpleSearchForm = document.getElementById('simple-search-form');
+        const searchFakturaInput = document.getElementById('searchFaktura');
+        const searchMusteriKoduInput = document.getElementById('searchMusteriKodu');
+        const searchBtn = document.getElementById('searchBtn');
+        const showAllBtn = document.getElementById('showAllBtn');
+        const searchFeedback = document.getElementById('search-feedback');
+        const tableLoaderOverlay = document.getElementById('table-loader-overlay');
+        const resultsTable = document.getElementById('results-table');
+        const resultsTbody = document.getElementById('results-tbody');
+        const sortableHeaders = document.querySelectorAll('.sortable-header');
+        const paginationControls = document.getElementById('pagination-controls');
+        const paginationStatus = document.getElementById('pagination-status');
+        const rowsPerPageSelect = document.getElementById('rowsPerPageSelect');
+        const prevPageBtn = document.getElementById('prevPageBtn');
+        const nextPageBtn = document.getElementById('nextPageBtn');
+        const editModal = document.getElementById('editModal');
+        const editForm = document.getElementById('editForm');
+        const saveEditBtn = document.getElementById('save-edit-btn');
+        const cancelEditBtn = document.getElementById('cancel-edit-btn');
+        const closeModalBtn = document.getElementById('closeModalBtn');
+        const confirmModal = document.getElementById('confirmModal');
+        const closeConfirmBtn = document.getElementById('closeConfirmBtn');
+        const cancelDeleteBtn = document.getElementById('cancelDeleteBtn');
+        const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+        const confirmMessage = document.getElementById('confirm-message');
+        const rowToDeleteInput = document.getElementById('rowToDelete');
+        const toastElement = document.getElementById('toast-notification');
+        const toastMessageElement = document.getElementById('toast-message');
+        let toastTimeout;
+        let currentSearchResults = [];
+        let flatpickrInstances = {}; // Flatpickr instansiyalarını saxlamaq üçün
+
+        let currentState = { page: 1, rowsPerPage: 10, sortColumn: 0, sortOrder: 'asc', totalRows: 0, totalPages: 0 };
+
+        // --- Menyuların İdarə Olunması ---
+        tabButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                tabButtons.forEach(btn => btn.classList.remove('active'));
+                button.classList.add('active');
+                const targetPanelId = button.getAttribute('data-tab');
+                tabPanels.forEach(panel => panel.classList.remove('active'));
+                document.getElementById(targetPanelId).classList.add('active');
+            });
+        });
+
+        // --- Məlumat Göndərmə (Yaddaşda Saxlama) ---
+        dataForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            toggleLoader(submitBtn, true);
+            const muqavileTarixiVal = flatpickrInstances['muqavileTarixi'] ? flatpickrInstances['muqavileTarixi'].selectedDates[0] : null;
+            const imzalanmaTarixiVal = flatpickrInstances['imzalanmaTarixi'] ? flatpickrInstances['imzalanmaTarixi'].selectedDates[0] : null;
+            const formData = {
+                action: 'writeData',
+                fakturaNo: document.getElementById('fakturaNo').value,
+                musteriKodu: document.getElementById('musteriKodu').value,
+                musteriAd: document.getElementById('musteriAd').value,
+                muqavileTarixi: muqavileTarixiVal ? formatDateToYYYYMMDD_internal(muqavileTarixiVal) : '',
+                imzalanmaTarixi: imzalanmaTarixiVal ? formatDateToYYYYMMDD_internal(imzalanmaTarixiVal) : '',
+                imzalayanSexs: document.getElementById('imzalayanSexs').value
+            };
+            fetch(GOOGLE_SCRIPT_URL, { method: 'POST', body: JSON.stringify(formData) })
+            .then(response => response.json())
+            .then(result => {
+                if (result.status === 'success') {
+                    showToast(result.message, 'success');
+                    dataForm.reset();
+                    if(flatpickrInstances['muqavileTarixi']) flatpickrInstances['muqavileTarixi'].clear();
+                    if(flatpickrInstances['imzalanmaTarixi']) flatpickrInstances['imzalanmaTarixi'].clear();
+                    if(currentState.totalRows > 0) fetchPaginatedData();
+                } else { showToast(result.message, 'error'); }
+            })
+            .catch(error => { showToast('Sistem xətası baş verdi.', 'error'); })
+            .finally(() => { toggleLoader(submitBtn, false); });
+        });
+
+        // --- ƏSAS MƏLUMAT GƏTİRMƏ FUNKSİYASI ---
+        function fetchPaginatedData(buttonElement = null) {
+            tableLoaderOverlay.style.display = 'flex';
+            showSearchFeedback('', '');
+            const filters = { fakturaNo: searchFakturaInput.value.trim(), musteriKodu: searchMusteriKoduInput.value.trim() };
+            const params = { ...currentState, filters: filters };
+            fetch(GOOGLE_SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'getData', params: params }) })
+            .then(response => response.json())
+            .then(result => {
+                if (result.status === 'success') {
+                    currentSearchResults = result.data;
+                    displayResults(result.data);
+                    currentState.page = result.page;
+                    currentState.totalRows = result.totalRows;
+                    currentState.totalPages = result.totalPages;
+                    updatePaginationUI();
+                } else { showToast('XƏTA: ' + result.message, 'error'); }
+            })
+            .catch(error => { showToast('Məlumat gətirilərkən sistem xətası baş verdi.', 'error'); })
+            .finally(() => {
+                tableLoaderOverlay.style.display = 'none';
+                if (buttonElement) { toggleLoader(buttonElement, false); }
+            });
+        }
+
+        // --- Sadə Axtarış Hadisələri ---
+        simpleSearchForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            currentState.page = 1;
+            if (searchFakturaInput.value.trim() === '' && searchMusteriKoduInput.value.trim() === '') {
+                showSearchFeedback('error', 'Axtarış üçün Faktura Nömrəsi və ya Müştəri Kodu daxil edin.');
+                return;
+            }
+            toggleLoader(searchBtn, true);
+            fetchPaginatedData(searchBtn);
+        });
+        showAllBtn.addEventListener('click', function() {
+            searchFakturaInput.value = ''; searchMusteriKoduInput.value = ''; currentState.page = 1;
+            toggleLoader(showAllBtn, true);
+            fetchPaginatedData(showAllBtn);
+        });
+
+        // --- Çeşidləmə (Sorting) Hadisələri ---
+        sortableHeaders.forEach(header => {
+            header.addEventListener('click', () => {
+                const newSortColumn = parseInt(header.getAttribute('data-column-index'));
+                let newSortOrder = (currentState.sortColumn === newSortColumn && currentState.sortOrder === 'asc') ? 'desc' : 'asc';
+                currentState.sortColumn = newSortColumn; currentState.sortOrder = newSortOrder; currentState.page = 1;
+                updateSortIcons(); fetchPaginatedData();
+            });
+        });
+        function updateSortIcons() {
+            sortableHeaders.forEach(header => {
+                const icon = header.querySelector('.sort-icon'); const columnIndex = parseInt(header.getAttribute('data-column-index'));
+                if (icon) {
+                    if (columnIndex === currentState.sortColumn) {
+                        header.classList.add('sorted'); icon.textContent = currentState.sortOrder === 'asc' ? 'arrow_upward' : 'arrow_downward';
+                    } else { header.classList.remove('sorted'); icon.textContent = 'unfold_more'; }
+                }
+            });
+        }
+
+        // --- Səhifələmə (Pagination) Hadisələri ---
+        prevPageBtn.addEventListener('click', () => { if (currentState.page > 1) { currentState.page--; fetchPaginatedData(); } });
+        nextPageBtn.addEventListener('click', () => { if (currentState.page < currentState.totalPages) { currentState.page++; fetchPaginatedData(); } });
+        rowsPerPageSelect.addEventListener('change', () => { currentState.rowsPerPage = parseInt(rowsPerPageSelect.value); currentState.page = 1; fetchPaginatedData(); });
+        function updatePaginationUI() {
+            paginationStatus.textContent = currentState.totalRows === 0 ? '0 nəticə' : `${currentState.totalRows} nəticədən ${(currentState.page - 1) * currentState.rowsPerPage + 1}-${Math.min(currentState.page * currentState.rowsPerPage, currentState.totalRows)} göstərilir`;
+            prevPageBtn.disabled = (currentState.page === 1);
+            nextPageBtn.disabled = (currentState.totalPages === 0 || currentState.page === currentState.totalPages);
+        }
+
+        // --- Nəticələri Göstərən Funksiya ---
+        function displayResults(data) {
+            resultsTbody.innerHTML = '';
+            if (data.length === 0) {
+                resultsTbody.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 30px; color: var(--text-light-color);">${(currentState.totalRows > 0 || searchFakturaInput.value.trim() !== '' || searchMusteriKoduInput.value.trim() !== '') ? 'Filtrlərə uyğun heç bir məlumat tapılmadı.' : 'Zəhmət olmasa, axtarış edin və ya "Hamısını Göstər" düyməsini basın.'}</td></tr>`;
+                return;
+            }
+            data.forEach(row => {
+                const tr = document.createElement('tr'); tr.id = 'row-' + row.rowIndex;
+                tr.innerHTML = `<td>${row.fakturaNo}</td><td>${row.musteriKodu}</td><td>${row.musteriAd}</td><td>${formatDateForDisplay(row.muqavileTarixi)}</td><td>${formatDateForDisplay(row.imzalanmaTarixi)}</td><td>${row.imzalayanSexs}</td><td><div class="action-buttons"><button class="edit-btn" data-row-index="${row.rowIndex}"><span class="material-symbols-outlined">edit</span>Düzəliş</button><button class="delete-btn" data-row-index="${row.rowIndex}" data-faktura-no="${row.fakturaNo}"><span class="material-symbols-outlined">delete</span>Sil</button></div></td>`;
+                resultsTbody.appendChild(tr);
+            });
+            resultsTbody.querySelectorAll('.edit-btn').forEach(b => b.addEventListener('click', e => openEditModal(e.currentTarget)));
+            resultsTbody.querySelectorAll('.delete-btn').forEach(b => b.addEventListener('click', e => openConfirmModal(e.currentTarget)));
+        }
+
+        // --- Düzəliş Modalı Funksiyaları ---
+        function openEditModal(buttonElement) {
+            const rowIndex = buttonElement.getAttribute('data-row-index');
+            const dataToEdit = currentSearchResults.find(item => item.rowIndex == rowIndex);
+            if (!dataToEdit) { showToast('Düzəliş üçün məlumat tapılmadı.', 'error'); return; }
+            editForm.reset(); // Formu təmizlə
+            document.getElementById('editRowIndex').value = dataToEdit.rowIndex;
+            document.getElementById('editFakturaNo').value = dataToEdit.fakturaNo;
+            document.getElementById('editMusteriKodu').value = dataToEdit.musteriKodu;
+            document.getElementById('editMusteriAd').value = dataToEdit.musteriAd;
+            document.getElementById('editImzalayanSexs').value = dataToEdit.imzalayanSexs;
+            if (flatpickrInstances['editMuqavileTarixi']) flatpickrInstances['editMuqavileTarixi'].setDate(dataToEdit.muqavileTarixi || null, true);
+            if (flatpickrInstances['editImzalanmaTarixi']) flatpickrInstances['editImzalanmaTarixi'].setDate(dataToEdit.imzalanmaTarixi || null, true);
+            editModal.style.display = 'block';
+        }
+        function closeEditModal() { editModal.style.display = 'none'; }
+        closeModalBtn.addEventListener('click', closeEditModal);
+        cancelEditBtn.addEventListener('click', closeEditModal);
+
+        // --- Dəyişiklikləri Yadda Saxlama ---
+        editForm.addEventListener('submit', function(e) {
+            e.preventDefault(); toggleLoader(saveEditBtn, true);
+            const muqavileTarixiVal = flatpickrInstances['editMuqavileTarixi'] ? flatpickrInstances['editMuqavileTarixi'].selectedDates[0] : null;
+            const imzalanmaTarixiVal = flatpickrInstances['editImzalanmaTarixi'] ? flatpickrInstances['editImzalanmaTarixi'].selectedDates[0] : null;
+            const updatedData = {
+                action: 'updateData', rowIndex: document.getElementById('editRowIndex').value,
+                fakturaNo: document.getElementById('editFakturaNo').value, musteriKodu: document.getElementById('editMusteriKodu').value,
+                musteriAd: document.getElementById('editMusteriAd').value, muqavileTarixi: muqavileTarixiVal ? formatDateToYYYYMMDD_internal(muqavileTarixiVal) : '',
+                imzalanmaTarixi: imzalanmaTarixiVal ? formatDateToYYYYMMDD_internal(imzalanmaTarixiVal) : '', imzalayanSexs: document.getElementById('editImzalayanSexs').value
+            };
+            fetch(GOOGLE_SCRIPT_URL, { method: 'POST', body: JSON.stringify(updatedData) })
+            .then(res => res.json()).then(result => {
+                if (result.status === 'success') { showToast(result.message, 'success'); fetchPaginatedData(); setTimeout(closeEditModal, 500); }
+                else { showToast(result.message, 'error'); }
+            }).catch(err => { showToast('Sistem xətası baş verdi.', 'error'); })
+            .finally(() => { toggleLoader(saveEditBtn, false); });
+        });
+
+        // --- Silmə Modalı Funksiyaları ---
+        function openConfirmModal(buttonElement) {
+            const rowIndex = buttonElement.getAttribute('data-row-index'); const fakturaNo = buttonElement.getAttribute('data-faktura-no');
+            rowToDeleteInput.value = rowIndex; confirmMessage.innerHTML = `<strong>'${fakturaNo}'</strong> nömrəli fakturanı silməyə əminsiniz? <br> Bu əməliyyat geri qaytarıla bilməz.`;
+            confirmModal.style.display = 'block';
+        }
+        function closeConfirmModal() { confirmModal.style.display = 'none'; rowToDeleteInput.value = ''; }
+        closeConfirmBtn.addEventListener('click', closeConfirmModal); cancelDeleteBtn.addEventListener('click', closeConfirmModal);
+        confirmDeleteBtn.addEventListener('click', function() {
+            const rowIndex = rowToDeleteInput.value; if (!rowIndex) return;
+            toggleLoader(confirmDeleteBtn, true); const deleteData = { action: 'deleteData', rowIndex: rowIndex };
+            fetch(GOOGLE_SCRIPT_URL, { method: 'POST', body: JSON.stringify(deleteData) })
+            .then(res => res.json()).then(result => {
+                if (result.status === 'success') {
+                    closeConfirmModal(); showToast(result.message, 'success');
+                    if(currentSearchResults.length === 1 && currentState.page > 1) { currentState.page--; }
+                    fetchPaginatedData();
+                } else { showToast(result.message, 'error'); }
+            }).catch(err => { showToast('Sistem xətası baş verdi.', 'error'); })
+            .finally(() => { toggleLoader(confirmDeleteBtn, false); });
+        });
+
+        // Ümumi pəncərə klikləməsi
+        window.addEventListener('click', function(event) { if (event.target == editModal) { closeEditModal(); } if (event.target == confirmModal) { closeConfirmModal(); } });
+
+        // --- Köməkçi Funksiyalar ---
+        function toggleLoader(button, isLoading) { if (!button) return; button.disabled = isLoading; button.classList.toggle('loading', isLoading); }
+        function showToast(message, type = 'success') { clearTimeout(toastTimeout); toastMessageElement.textContent = message; toastElement.className = 'toast'; toastElement.classList.add(type); toastElement.classList.add('show'); toastTimeout = setTimeout(() => { toastElement.classList.remove('show'); }, 3000); }
+        function showSearchFeedback(type, message) { searchFeedback.className = ''; if (type) { searchFeedback.classList.add(type); searchFeedback.textContent = message; searchFeedback.style.display = 'flex'; } else { searchFeedback.style.display = 'none'; } }
+        function formatDateForDisplay(dateString) { if (!dateString) return ''; try { const date = new Date(dateString); const day = date.getDate().toString().padStart(2, '0'); const month = (date.getMonth() + 1).toString().padStart(2, '0'); const year = date.getFullYear(); return `${day}-${month}-${year}`; } catch (e) { return dateString; } }
+        function formatDateToYYYYMMDD_internal(dateObject) { if (!dateObject) return ''; const year = dateObject.getFullYear(); const month = (dateObject.getMonth() + 1).toString().padStart(2, '0'); const day = dateObject.getDate().toString().padStart(2, '0'); return `${year}-${month}-${day}`; }
+
+        // Səhifə yüklənəndə
+        document.addEventListener('DOMContentLoaded', () => {
+             updateSortIcons();
+             if (!resultsTbody.querySelector('tr')) { resultsTbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 30px; color: var(--text-light-color);">Zəhmət olmasa, axtarış edin və ya "Hamısını Göstər" düyməsini basın.</td></tr>'; }
+             const dateConfig = { dateFormat: "d-m-Y", locale: "az", allowInput: true };
+             flatpickrInstances['muqavileTarixi'] = flatpickr("#muqavileTarixi", dateConfig);
+             flatpickrInstances['imzalanmaTarixi'] = flatpickr("#imzalanmaTarixi", dateConfig);
+             flatpickrInstances['editMuqavileTarixi'] = flatpickr("#editMuqavileTarixi", dateConfig);
+             flatpickrInstances['editImzalanmaTarixi'] = flatpickr("#editImzalanmaTarixi", dateConfig);
+        });
+
+    </script>
+</body>
+</html>
