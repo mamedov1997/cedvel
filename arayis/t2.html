@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yenilənmiş Arayış Sistemi</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <style>
+        /* ----- CSS DƏYİŞƏNLƏRİ (VARIABLES) ----- */
+        :root {
+            --primary-color: #007bff; /* Mavi rəngə dəyişildi */
+            --primary-hover: #0056b3;
+            --secondary-color: #e9ecef;
+            --success-color: #28a745;
+            --danger-color: #dc3545;
+            --light-gray: #6c757d;
+            --border-color: #ccc;
+            --background-color: #f4f7fc;
+            --text-color: #343a40;
+            --white-color: #fff;
+            --shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            --border-radius: 8px;
+        }
+
+        /* ----- ÜMUMİ ELEMENTLƏR ----- */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Poppins', sans-serif; font-size: 14px;
+            color: var(--text-color); background-color: var(--background-color);
+            display: flex; justify-content: center; padding: 30px 15px;
+        }
+        .container { width: 100%; max-width: 850px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid var(--border-color); padding: 10px 12px; text-align: left; vertical-align: middle; }
+        th { background-color: var(--secondary-color); font-weight: 600; font-size: 11px; text-transform: uppercase; color: var(--light-gray); }
+        td { background-color: var(--white-color); }
+        tbody tr:hover { background-color: #f8f9fa; }
+
+        /* ----- MƏLUMAT KARTLARI (CARDS) ----- */
+        .card {
+            background-color: var(--white-color); border-radius: var(--border-radius);
+            box-shadow: var(--shadow); padding: 25px; margin-bottom: 25px;
+            border: 1px solid #e0e0e0;
+        }
+        .card-header {
+            display: flex; align-items: center; gap: 10px; font-size: 17px;
+            font-weight: 600; color: var(--primary-color); margin-bottom: 20px;
+            padding-bottom: 10px; border-bottom: 2px solid var(--primary-color);
+        }
+
+        /* ----- FORM ELEMENTLƏRİ ----- */
+        .form-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); /* Daha responsiv grid */
+            gap: 15px;
+        }
+        .form-input { display: flex; flex-direction: column; gap: 6px; }
+        .form-input.full-width { grid-column: 1 / -1; }
+        .form-input label { font-weight: 500; color: #555; }
+        .form-input .input-wrapper { position: relative; }
+        .form-input .input-wrapper i {
+            position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #aaa;
+        }
+        .form-input input, .form-input select {
+            width: 100%; padding: 10px 15px 10px 40px; border: 1px solid var(--border-color);
+            border-radius: 6px; font-family: 'Poppins', sans-serif; font-size: 13px;
+            transition: border-color 0.2s ease;
+        }
+        .form-input select { padding-left: 15px; } /* Select üçün icon yoxdursa */
+        .form-input input:focus, .form-input select:focus {
+            outline: none; border-color: var(--primary-color); box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+        }
+        .fullname-container { display: flex; gap: 8px; }
+        .fullname-container input { flex-grow: 1; padding-left: 40px; }
+        .fullname-container select { width: 120px; padding-left: 10px; }
+        
+        /* ----- DÜYMƏLƏR (BUTTONS) ----- */
+        .form-buttons { display: flex; justify-content: center; gap: 10px; margin-top: 20px; }
+        .btn {
+            padding: 10px 20px; font-size: 13px; font-weight: 600; border: none;
+            border-radius: 6px; cursor: pointer; display: inline-flex;
+            align-items: center; gap: 6px; transition: background-color 0.2s ease, transform 0.2s ease;
+        }
+        .btn:hover { transform: translateY(-1px); }
+        .btn-primary { background-color: var(--primary-color); color: var(--white-color); }
+        .btn-primary:hover { background-color: var(--primary-hover); }
+        .btn-success { background-color: var(--success-color); color: var(--white-color); }
+        .btn-success:hover { background-color: #1e7e34; }
+        .btn-secondary { background-color: var(--light-gray); color: var(--white-color); }
+        .btn-secondary:hover { background-color: #5a6268; }
+
+        /* ----- CƏDVƏL ƏMƏLİYYAT DÜYMƏLƏRİ ----- */
+        .action-buttons button { background: none; border: none; cursor: pointer; font-size: 15px; margin: 0 4px; }
+        .action-buttons button:hover { transform: scale(1.1); }
+        .edit-button { color: var(--primary-color); }
+        .delete-button { color: var(--danger-color); }
+        
+        /* ----- ARAYIŞ SƏHİFƏSİ ----- */
+        #certificate-page { display: none; background-color: #fff; padding: 40px; border: 1px solid #ddd; animation: fadeIn 0.4s ease; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        #certificate-page p, #certificate-page b, #certificate-page span, #certificate-page div { font-size: 15px; line-height: 1.6; }
+        .cert-header { text-align: center; border-bottom: 2px solid #ccc; padding-bottom: 15px; margin-bottom: 25px; }
+        .cert-header img { width: 100%; max-width: 300px; } /* Loqo ölçüsü azaldıldı */
+        .cert-meta { display: flex; justify-content: space-between; margin-bottom: 20px; font-size: 13px; }
+        .cert-title { text-align: center; font-weight: bold; font-size: 20px !important; margin-bottom: 25px; letter-spacing: 1.5px; }
+        .cert-body p { text-indent: 25px; margin-bottom: 15px; }
+        #cert-final-remark { margin-top: 30px; font-style: italic; color: #555; font-size: 13px !important; }
+
+        /* İmza düzəlişi */
+        .cert-footer { margin-top: 50px; }
+        .cert-footer-line { width: 100%; margin-top: 15px; }
+        .cert-signer-block { display: flex; align-items: flex-end; width: 100%; }
+        #doc-title-text { font-weight: bold; font-size: 15px; padding-bottom: 5px; white-space: nowrap; margin-right: 20px; }
+        #doc-signer-name {
+            display: inline-block; min-width: 200px; border-bottom: 1px solid black;
+            text-align: center; padding-bottom: 5px; font-size: 15px;
+            margin-left: 100px; /* Kiçik mərkəzləşdirmə üçün tənzimləndi */
+        }
+        
+        #certificate-page table { margin-block: 25px; }
+        #certificate-page th, #certificate-page td { border: 1px solid #bbb; text-align: center; padding: 8px; font-size: 12px; }
+        #certificate-page th { background-color: #f1f1f1; }
+
+        .logo-container { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px; }
+        .logo-container img { width: 120px; }
+        .logo-container p { font-size: 11px; color: #999; text-align: right; }
+
+        /* ----- ÇAP STİLİ (Sürət üçün minimal) ----- */
+        @media print {
+            body { margin: 0; padding: 0; background-color: #fff; }
+            .container { max-width: 100%; padding: 0; }
+            #form-page, .no-print { display: none !important; }
+            #certificate-page { 
+                display: block !important; 
+                box-shadow: none; border: none; font-size: 12pt;
+                padding: 10mm; /* Çap üçün ölçü */
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div id="form-page">
+            <input type="hidden" id="edit-row-index" value="">
+            
+            <div class="card">
+                <div class="logo-container">
+                    <img src="https://mamedov1997.github.io/cedvel/kontaktlogo.png" alt="Logo">
+                    <p>Arzu Məmmədov tərəfindən hazırlanıb</p>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <i class="fa-solid fa-file-invoice"></i>
+                    <span>Ümumi Məlumatlar</span>
+                </div>
+                <div class="form-grid">
+                    <div class="form-input">
+                        <label for="date-input">Tarix:</label>
+                        <div class="input-wrapper">
+                            <i class="fa-solid fa-calendar-day"></i>
+                            <input type="date" id="date-input">
+                        </div>
+                    </div>
+                    
+                    <div class="form-input">
+                        <label for="location-input">Rayon/Şəhər:</label>
+                        <div class="input-wrapper">
+                            <i class="fa-solid fa-map-location-dot"></i>
+                            <select id="location-input">
+                                <option value="Bakı Şəhəri">Bakı Şəhəri</option>
+                                <option value="Gəncə Şəhəri">Gəncə Şəhəri</option>
+                                <option value="Sumqayıt Şəhəri">Sumqayıt Şəhəri</option>
+                                <option value="Mingəçevir Şəhəri">Mingəçevir Şəhəri</option>
+                                <option value="Şirvan Şəhəri">Şirvan Şəhəri</option>
+                                <option value="Xankəndi Şəhəri">Xankəndi Şəhəri</option>
+                                <option value="Lənkəran Şəhəri">Lənkəran Şəhəri</option>
+                                <option value="Yevlax Şəhəri">Yevlax Şəhəri</option>
+                                <option value="Abşeron Rayonu">Abşeron Rayonu</option>
+                                <option value="Ağcabədi Rayonu">Ağcabədi Rayonu</option>
+                                <option value="Ağdaş Rayonu">Ağdaş Rayonu</option>
+                                <option value="Ağsu Rayonu">Ağsu Rayonu</option>
+                                <option value="Astara Rayonu">Astara Rayonu</option>
+                                <option value="Bərdə Rayonu">Bərdə Rayonu</option>
+                                <option value="Biləsuvar Rayonu">Biləsuvar Rayonu</option>
+                                <option value="Cəlilabad Rayonu">Cəlilabad Rayonu</option>
+                                <option value="Füzuli Rayonu">Füzuli Rayonu</option>
+                                <option value="Gədəbəy Rayonu">Gədəbəy Rayonu</option>
+                                <option value="Göyçay Rayonu">Göyçay Rayonu</option>
+                                <option value="Hacıqabul Rayonu">Hacıqabul Rayonu</option>
+                                <option value="Xaçmaz Rayonu">Xaçmaz Rayonu</option>
+                                <option value="İmişli Rayonu">İmişli Rayonu</option>
+                                <option value="İsmayıllı Rayonu">İsmayıllı Rayonu</option>
+                                <option value="Kürdəmir Rayonu">Kürdəmir Rayonu</option>
+                                <option value="Qazax Rayonu">Qazax Rayonu</option>
+                                <option value="Qəbələ Rayonu">Qəbələ Rayonu</option>
+                                <option value="Quba Rayonu">Quba Rayonu</option>
+                                <option value="Qusar Rayonu">Qusar Rayonu</option>
+                                <option value="Saatlı Rayonu">Saatlı Rayonu</option>
+                                <option value="Sabirabad Rayonu">Sabirabad Rayonu</option>
+                                <option value="Şəki Rayonu">Şəki Rayonu</option>
+                                <option value="Şamaxı Rayonu" selected>Şamaxı Rayonu</option>
+                                <option value="Şəmkir Rayonu">Şəmkir Rayonu</option>
+                                <option value="Salyan Rayonu">Salyan Rayonu</option>
+                                <option value="Tovuz Rayonu">Tovuz Rayonu</option>
+                                <option value="Ucar Rayonu">Ucar Rayonu</option>
+                                <option value="Zaqatala Rayonu">Zaqatala Rayonu</option>
+                                <option value="Zərdab Rayonu">Zərdab Rayonu</option>
+                                <option value="Oğuz Rayonu">Oğuz Rayonu</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-input">
+                        <label for="number-input">Arayış No:</label>
+                        <div class="input-wrapper">
+                            <i class="fa-solid fa-hashtag"></i>
+                            <input type="text" id="number-input" value="0044" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+                        </div>
+                    </div>
+
+                    <div class="form-input">
+                        <label for="manager-input">Mağaza rəhbəri (Prioritetli):</label>
+                         <div class="input-wrapper">
+                            <i class="fa-solid fa-user-tie"></i>
+                            <input type="text" id="manager-input" placeholder="Rəhbərin adını daxil edin">
+                        </div>
+                    </div>
+
+                    <div class="form-input full-width">
+                        <label for="deputy-manager-input">Mağaza rəhbərinin müavini (Lazımdırsa doldurun):</label>
+                         <div class="input-wrapper">
+                            <i class="fa-solid fa-user-tie"></i>
+                            <input type="text" id="deputy-manager-input" placeholder="Müavinin adını daxil edin">
+                        </div>
+                    </div>
+
+                    <div class="form-input full-width">
+                        <label for="fullname-input">Müştərinin Ad, Soyad, Ata adı:</label>
+                        <div class="fullname-container">
+                             <div class="input-wrapper" style="width:100%">
+                                 <i class="fa-solid fa-user"></i>
+                                 <input type="text" id="fullname-input" placeholder="Məs: Əliyev Vəli Həsən">
+                            </div>
+                            <select id="gender-suffix"><option value="oğluna">oğluna</option><option value="qızına">qızına</option></select>
+                        </div>
+                    </div>
+
+                    <div class="form-input full-width">
+                        <label for="fin-input">FİN kod:</label>
+                        <div class="input-wrapper">
+                            <i class="fa-solid fa-id-card"></i>
+                            <input type="text" id="fin-input" placeholder="Ş/V FİN kodunu daxil edin">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <i class="fa-solid fa-cart-plus"></i>
+                    <span id="product-form-title">Yeni Məhsul Əlavə Et</span>
+                </div>
+                <div class="form-grid">
+                    <div class="form-input full-width">
+                        <label for="product-name">Məhsulun adı:</label>
+                        <div class="input-wrapper">
+                             <i class="fa-solid fa-box-open"></i>
+                            <input type="text" id="product-name" placeholder="Məhsulun adını daxil edin">
+                        </div>
+                    </div>
+                    <div class="form-input">
+                        <label for="sale-date">Satış tarixi:</label>
+                         <div class="input-wrapper">
+                             <i class="fa-solid fa-calendar-check"></i>
+                            <input type="text" id="sale-date" placeholder="gg/aa/iiii" oninput="formatDate(this)">
+                        </div>
+                    </div>
+                    <div class="form-input">
+                        <label for="credit-value">Kredit dəyəri cəm:</label>
+                        <div class="input-wrapper">
+                            <i class="fa-solid fa-money-bill-wave"></i>
+                            <input type="text" id="credit-value" placeholder="Məbləğ" oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1')">
+                        </div>
+                    </div>
+                    <div class="form-input">
+                        <label for="credit-status">Kredit/statusu:</label>
+                         <div class="input-wrapper">
+                             <i class="fa-solid fa-circle-check"></i>
+                            <select id="credit-status"><option value="BAĞLI">BAĞLI</option></select>
+                        </div>
+                    </div>
+                    <div class="form-input">
+                        <label for="contract-number">Müqavilə nömrəsi:</label>
+                         <div class="input-wrapper">
+                            <i class="fa-solid fa-file-signature"></i>
+                            <input type="text" id="contract-number" placeholder="Müqavilə nömrəsi" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+                        </div>
+                    </div>
+                </div>
+                <div class="form-buttons">
+                    <button id="add-update-product-btn" onclick="handleProductSubmit()" class="btn btn-primary">
+                        <i class="fa-solid fa-plus"></i> Məhsul Əlavə Et
+                    </button>
+                    <button onclick="clearProductForm()" class="btn btn-secondary">
+                        <i class="fa-solid fa-eraser"></i> Formanı Təmizlə
+                    </button>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <i class="fa-solid fa-list-check"></i>
+                    <span>Əlavə Edilmiş Məhsullar</span>
+                </div>
+                <table id="product-table-form">
+                    <thead><tr><th>Məhsulun adı</th><th>Satış tarixi</th><th>Kredit dəyəri cəm</th><th>Borc</th><th>Kredit/statusu</th><th>Müqavilə nömrəsi</th><th>Əməliyyat</th></tr></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+            <div class="form-buttons">
+                <button onclick="generateAndShowCertificate()" class="btn btn-success">
+                    <i class="fa-solid fa-file-export"></i> Arayışı Hazırla
+                </button>
+            </div>
+        </div>
+
+        <div id="certificate-page">
+            <div class="cert-header">
+                <img src="https://mamedov1997.github.io/cedvel/abc.png" alt="ABC Telecom Logo">
+            </div>
+            <div class="cert-meta">
+                <div>
+                    <span id="doc-location"></span><br>
+                    Arayış №: <b id="doc-number"></b>
+                </div>
+                <span id="doc-date"></span>
+            </div>
+            <h1 class="cert-title">A R A Y I Ş</h1>
+            <div class="cert-body">
+                <p>
+                    Verilir <b id="doc-fullname"></b> (FİN: <b id="doc-fin"></b>) ondan ötrü ki, “ABC Telecom” MMC-yə məxsus “Kontakt Home” mağazalar şəbəkəsindən əldə edilmiş aşağıda göstərilən məhsul(lar) və müqavilə(lər) üzrə Cəmiyyətimizə olan hal-hazırda qalıq borcu aşağıdakı cədvəldə göstərilib:
+                </p>
+            </div>
+            <table>
+                <thead><tr><th>Məhsulun adı</th><th>Satış tarixi</th><th>Kredit dəyəri cəm</th><th>Borc</th><th>Kredit/statusu</th><th>Müqavilə nömrəsi</th></tr></thead>
+                <tbody id="product-table-certificate"></tbody>
+            </table>
+            <p id="cert-final-remark">Arayış tələb olunan yerə təqdim edilmək üçün verilir.</p>
+            <div class="cert-footer">
+                <p>Hörmətlə,</p>
+                <div class="cert-footer-line">
+                    <div class="cert-signer-block">
+                        <span id="doc-title-text">Mağaza rəhbəri:</span>
+                         <span id="doc-signer-name"></span>
+                    </div>
+                </div>
+                </div>
+            <div class="form-buttons no-print">
+                <button onclick="window.print()" class="btn btn-primary"><i class="fa-solid fa-print"></i> Çap Et</button>
+                <button onclick="showPage('form-page')" class="btn btn-secondary"><i class="fa-solid fa-arrow-left"></i> Geri Qayıt</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Cari tarixi qeyd edir
+            document.getElementById('date-input').valueAsDate = new Date();
+        });
+
+        function formatDate(input) {
+            let value = input.value.replace(/\D/g, '');
+            if (value.length > 2) value = value.substring(0, 2) + '/' + value.substring(2);
+            if (value.length > 5) value = value.substring(0, 5) + '/' + value.substring(5, 9);
+            input.value = value;
+        }
+
+        function showPage(pageId) {
+            document.getElementById('form-page').style.display = 'none';
+            document.getElementById('certificate-page').style.display = 'none';
+            document.getElementById(pageId).style.display = 'block';
+        }
+
+        function handleProductSubmit() {
+            const editIndex = document.getElementById('edit-row-index').value;
+            if (editIndex) {
+                updateExistingProduct(editIndex);
+            } else {
+                addNewProduct();
+            }
+        }
+
+        function addNewProduct() {
+            const tableBody = document.getElementById('product-table-form').getElementsByTagName('tbody')[0];
+            const newRow = tableBody.insertRow();
+            const isDataValid = fillRowData(newRow);
+            if (isDataValid) clearProductForm();
+        }
+
+        function updateExistingProduct(rowIndex) {
+            const row = document.getElementById('product-table-form').rows[rowIndex];
+            const isDataValid = fillRowData(row, true);
+            if (isDataValid) clearProductForm();
+        }
+
+        function fillRowData(row, isUpdate = false) {
+            const productName = document.getElementById('product-name').value.trim();
+            const saleDate = document.getElementById('sale-date').value.trim();
+            const creditValue = document.getElementById('credit-value').value.trim();
+            const creditStatus = document.getElementById('credit-status').value;
+            const contractNumber = document.getElementById('contract-number').value.trim();
+
+            if (!productName || !saleDate || !creditValue || !contractNumber) {
+                alert("Zəhmət olmasa, bütün məhsul xanalarını doldurun.");
+                return false;
+            }
+            
+            const rowContents = `
+                <td>${productName}</td>
+                <td>${saleDate}</td>
+                <td>${creditValue} AZN</td>
+                <td>0 AZN</td>
+                <td>${creditStatus}</td>
+                <td>${contractNumber}</td>
+                <td class="action-buttons">
+                    <button onclick="editRow(this)" class="edit-button" title="Düzəliş et"><i class="fa-solid fa-pencil"></i></button>
+                    <button onclick="deleteRow(this)" class="delete-button" title="Sil"><i class="fa-solid fa-trash-can"></i></button>
+                </td>
+            `;
+
+            if (isUpdate) {
+                row.cells[0].innerHTML = productName;
+                row.cells[1].innerHTML = saleDate;
+                row.cells[2].innerHTML = `${creditValue} AZN`;
+                row.cells[3].innerHTML = `0 AZN`;
+                row.cells[4].innerHTML = creditStatus;
+                row.cells[5].innerHTML = contractNumber;
+            } else {
+                row.innerHTML = rowContents;
+            }
+
+            return true;
+        }
+
+        function editRow(button) {
+            const row = button.closest('tr');
+            const creditValueText = row.cells[2].innerText.replace(' AZN', '').trim();
+
+            document.getElementById('product-name').value = row.cells[0].innerText;
+            document.getElementById('sale-date').value = row.cells[1].innerText;
+            document.getElementById('credit-value').value = creditValueText;
+            document.getElementById('credit-status').value = row.cells[4].innerText;
+            document.getElementById('contract-number').value = row.cells[5].innerText;
+            
+            document.getElementById('edit-row-index').value = row.rowIndex;
+
+            const btn = document.getElementById('add-update-product-btn');
+            btn.innerHTML = '<i class="fa-solid fa-save"></i> Dəyişikliyi Saxla';
+            btn.className = 'btn btn-success';
+            
+            document.getElementById('product-form-title').innerText = 'Məhsulda Düzəliş Et';
+            
+            document.getElementById('product-name').focus();
+            window.scrollTo({ top: document.querySelector('.card:nth-child(3)').offsetTop, behavior: 'smooth' });
+        }
+
+        function deleteRow(button) {
+            if (confirm("Bu məhsulu silməyə əminsiniz?")) {
+                 button.closest('tr').remove();
+                 // Silindikdən sonra əgər düzəliş rejimində idiksə, formu təmizləyirik
+                 if (document.getElementById('edit-row-index').value == button.closest('tr').rowIndex) {
+                    clearProductForm();
+                 }
+            }
+        }
+
+        function clearProductForm() {
+            document.getElementById('product-name').value = '';
+            document.getElementById('sale-date').value = '';
+            document.getElementById('credit-value').value = '';
+            document.getElementById('contract-number').value = '';
+            document.getElementById('edit-row-index').value = '';
+            
+            const btn = document.getElementById('add-update-product-btn');
+            btn.innerHTML = '<i class="fa-solid fa-plus"></i> Məhsul Əlavə Et';
+            btn.className = 'btn btn-primary';
+            document.getElementById('product-form-title').innerText = 'Yeni Məhsul Əlavə Et';
+        }
+
+        function generateAndShowCertificate() {
+            const manager = document.getElementById('manager-input').value.trim();
+            const deputyManager = document.getElementById('deputy-manager-input').value.trim();
+
+            let signerName = '';
+            let signerTitle = '';
+
+            // İmza üçün bir şəxs seçilməsi məntiqi (Rəhbər > Müavin)
+            if (manager) {
+                signerName = manager;
+                signerTitle = 'Mağaza rəhbəri:';
+            } else if (deputyManager) {
+                signerName = deputyManager;
+                signerTitle = 'Mağaza rəhbərinin müavini:';
+            } else {
+                alert("Zəhmət olmasa, ya 'Mağaza rəhbəri', ya da 'Mağaza rəhbərinin müavini' xanasını doldurun.");
+                return;
+            }
+
+            const data = {
+                date: document.getElementById('date-input').value,
+                location: document.getElementById('location-input').value,
+                number: document.getElementById('number-input').value,
+                fullname: document.getElementById('fullname-input').value.trim(),
+                genderSuffix: document.getElementById('gender-suffix').value,
+                fin: document.getElementById('fin-input').value.trim(),
+                signerName: signerName, 
+                signerTitle: signerTitle, 
+                products: []
+            };
+
+            if (!data.fullname || !data.fin) {
+                alert("Zəhmət olmasa, 'Ümumi Məlumatlar' bölməsindəki bütün vacib xanaları (Müştəri, FİN) doldurun.");
+                return;
+            }
+
+            const tableRows = document.getElementById('product-table-form').getElementsByTagName('tbody')[0].rows;
+            if (tableRows.length === 0) {
+                alert("Arayış hazırlamaq üçün ən azı bir məhsul əlavə edilməlidir.");
+                return;
+            }
+
+            for (let row of tableRows) {
+                data.products.push({
+                    name: row.cells[0].innerText, saleDate: row.cells[1].innerText,
+                    creditValue: row.cells[2].innerText, debt: row.cells[3].innerText,
+                    status: row.cells[4].innerText, contract: row.cells[5].innerText
+                });
+            }
+            populateCertificate(data);
+            showPage('certificate-page');
+        }
+
+        function populateCertificate(data) {
+            let formattedDate = 'Tarix qeyd edilməyib';
+            if (data.date) {
+                const date = new Date(data.date);
+                formattedDate = `Tarix: ${String(date.getDate()).padStart(2, '0')}.${String(date.getMonth() + 1).padStart(2, '0')}.${date.getFullYear()}`;
+            }
+            document.getElementById('doc-date').innerText = formattedDate;
+            document.getElementById('doc-location').innerText = data.location;
+            document.getElementById('doc-number').innerText = data.number.padStart(4, '0');
+            document.getElementById('doc-fullname').innerText = `${data.fullname} ${data.genderSuffix}`;
+            document.getElementById('doc-fin').innerText = data.fin;
+            
+            document.getElementById('doc-title-text').innerText = data.signerTitle;
+            document.getElementById('doc-signer-name').innerHTML = `<b>${data.signerName}</b>`;
+
+
+            const tableBody = document.getElementById('product-table-certificate');
+            tableBody.innerHTML = '';
+            data.products.forEach(p => {
+                const newRow = tableBody.insertRow();
+                newRow.innerHTML = `
+                    <td>${p.name}</td><td>${p.saleDate}</td><td>${p.creditValue}</td>
+                    <td>${p.debt}</td><td>${p.status}</td><td>${p.contract}</td>
+                `;
+            });
+        }
+    </script>
+
+</body>
+</html>
