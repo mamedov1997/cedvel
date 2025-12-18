@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NoteFlow | Şəxsi Qeydlər</title>
+    <style>
+        :root {
+            --primary: #6C63FF;
+            --bg: #f0f2f5;
+            --card: #ffffff;
+            --text: #2d3436;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            height: 100vh;
+            margin: 0;
+            display: flex;
+            justify_content: center;
+            align-items: center;
+            color: var(--text);
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 2rem;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            width: 90%;
+            max-width: 400px;
+            backdrop-filter: blur(10px);
+        }
+
+        h2 {
+            text-align: center;
+            color: var(--primary);
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.2rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        select, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            box-sizing: border-box;
+            font-family: inherit;
+            transition: 0.3s;
+            resize: none;
+        }
+
+        select:focus, textarea:focus {
+            border-color: var(--primary);
+            outline: none;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+            font-size: 1rem;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(108, 99, 255, 0.4);
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        #status {
+            text-align: center;
+            margin-top: 1rem;
+            font-size: 0.9rem;
+            opacity: 0;
+            transition: 0.3s;
+        }
+        
+        .loader {
+            display: none;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #FFF;
+            border-bottom-color: transparent;
+            border-radius: 50%;
+            display: inline-block;
+            box-sizing: border-box;
+            animation: rotation 1s linear infinite;
+            margin-right: 10px;
+        }
+
+        @keyframes rotation {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>📝 NoteFlow</h2>
+    <form id="noteForm">
+        <div class="form-group">
+            <label for="category">Kateqoriya</label>
+            <select id="category" required>
+                <option value="Şəxsi">👤 Şəxsi</option>
+                <option value="İş">💼 İş</option>
+                <option value="İdeya">💡 İdeya</option>
+                <option value="Xərc">💰 Xərc</option>
+                <option value="Gündəlik">📖 Gündəlik</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="note">Qeydiniz</label>
+            <textarea id="note" rows="5" placeholder="Bu gün ağlınızda nə var?..." required></textarea>
+        </div>
+
+        <button type="submit" id="submitBtn">
+            <span class="btn-text">Bazaya Göndər</span>
+        </button>
+        
+        <div id="status"></div>
+    </form>
+</div>
+
+<script>
+    // ----------------------------------------------------
+    // AŞAĞIDAKI URL-İ ÖZ APPS SCRIPT URL-İNİZLƏ DƏYİŞİN
+    // ----------------------------------------------------
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz1BbEYzteCkb5p1dKIqarEctFxj3zH0zAzQURdd7RHtILMutvGQeQcqysliXyxW9Mi4Q/exec"; 
+
+    const form = document.getElementById('noteForm');
+    const statusDiv = document.getElementById('status');
+    const submitBtn = document.getElementById('submitBtn');
+
+    form.addEventListener('submit', e => {
+        e.preventDefault();
+        
+        // Düyməni deaktiv edirik
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span class="loader"></span> Göndərilir...';
+
+        let data = {
+            category: document.getElementById('category').value,
+            note: document.getElementById('note').value
+        };
+
+        fetch(SCRIPT_URL, {
+            method: "POST",
+            mode: "no-cors", // Google Script üçün vacibdir
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => {
+            // Uğurlu göndəriş
+            statusDiv.style.color = "green";
+            statusDiv.innerText = "✅ Qeyd uğurla yadda saxlanıldı!";
+            statusDiv.style.opacity = "1";
+            form.reset();
+            
+            setTimeout(() => {
+                statusDiv.style.opacity = "0";
+            }, 3000);
+        })
+        .catch(error => {
+            statusDiv.style.color = "red";
+            statusDiv.innerText = "❌ Xəta baş verdi.";
+            statusDiv.style.opacity = "1";
+            console.error('Error:', error);
+        })
+        .finally(() => {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<span class="btn-text">Bazaya Göndər</span>';
+        });
+    });
+</script>
+
+</body>
+</html>
