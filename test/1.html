@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mənim Gizli Gündəliyim</title>
+    <style>
+        :root {
+            --primary: #6c5ce7;
+            --bg: #f0f2f5;
+            --text: #2d3436;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #a29bfe, #74b9ff);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            padding: 2rem;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            width: 90%;
+            max-width: 500px;
+            transition: all 0.3s ease;
+        }
+
+        h2 { text-align: center; color: var(--primary); }
+
+        #auth-section, #diary-section { display: none; }
+
+        input, textarea {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            box-sizing: border-box;
+            outline: none;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+
+        button:hover { opacity: 0.9; transform: translateY(-2px); }
+
+        .note-card {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+            border-left: 5px solid var(--primary);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .note-date { font-size: 0.8rem; color: #888; }
+
+        #notes-list { max-height: 300px; overflow-y: auto; margin-top: 20px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div id="auth-section">
+        <h2 id="auth-title">Xoş Gəlmisiniz</h2>
+        <p id="auth-desc" style="text-align:center">Daxil olmaq üçün şifrəni yazın</p>
+        <input type="password" id="password-input" placeholder="Şifrə...">
+        <button onclick="checkAuth()">Giriş Et</button>
+    </div>
+
+    <div id="diary-section">
+        <h2>Gündəlik Qeydlər</h2>
+        <textarea id="note-input" rows="4" placeholder="Bu gün nələr baş verdi?"></textarea>
+        <button onclick="saveNote()">Qeyd Et</button>
+        <div id="notes-list"></div>
+        <button onclick="logout()" style="background:#ff7675; margin-top: 20px;">Çıxış</button>
+    </div>
+</div>
+
+<script>
+    const authSection = document.getElementById('auth-section');
+    const diarySection = document.getElementById('diary-section');
+    const passInput = document.getElementById('password-input');
+    const noteInput = document.getElementById('note-input');
+    const notesList = document.getElementById('notes-list');
+
+    // Başlanğıc Yoxlanışı
+    window.onload = () => {
+        if (!localStorage.getItem('diary_password')) {
+            document.getElementById('auth-title').innerText = "İlk Quraşdırma";
+            document.getElementById('auth-desc').innerText = "Gündəliyiniz üçün bir şifrə təyin edin";
+        }
+        authSection.style.display = 'block';
+    }
+
+    function checkAuth() {
+        const savedPass = localStorage.getItem('diary_password');
+        const enteredPass = passInput.value;
+
+        if (!savedPass) {
+            if(enteredPass.length < 4) return alert("Şifrə ən az 4 simvol olmalıdır");
+            localStorage.setItem('diary_password', enteredPass);
+            alert("Şifrə təyin edildi!");
+            showDiary();
+        } else if (savedPass === enteredPass) {
+            showDiary();
+        } else {
+            alert("Yanlış şifrə!");
+        }
+    }
+
+    function showDiary() {
+        authSection.style.display = 'none';
+        diarySection.style.display = 'block';
+        loadNotes();
+    }
+
+    function saveNote() {
+        const note = noteInput.value.trim();
+        if (!note) return;
+
+        const notes = JSON.parse(localStorage.getItem('my_notes') || '[]');
+        const newNote = {
+            text: note,
+            date: new Date().toLocaleString()
+        };
+        
+        notes.unshift(newNote);
+        localStorage.setItem('my_notes', JSON.stringify(notes));
+        noteInput.value = '';
+        loadNotes();
+    }
+
+    function loadNotes() {
+        const notes = JSON.parse(localStorage.getItem('my_notes') || '[]');
+        notesList.innerHTML = notes.map(n => `
+            <div class="note-card">
+                <div class="note-date">${n.date}</div>
+                <div>${n.text}</div>
+            </div>
+        `).join('');
+    }
+
+    function logout() {
+        location.reload();
+    }
+</script>
+
+</body>
+</html>
