@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tapşırıq və Qeyd Meneceri</title>
+    <style>
+        :root {
+            --primary-color: #4a90e2;
+            --bg-color: #f4f7f6;
+        }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg-color); display: flex; justify-content: center; padding: 20px; }
+        .container { background: white; width: 100%; max-width: 500px; padding: 20px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+        
+        /* Login Ekranı */
+        #login-screen { text-align: center; padding: 40px 20px; }
+        input[type="password"], input[type="text"], textarea { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; }
+        button { width: 100%; padding: 12px; background: var(--primary-color); color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        button:hover { background: #357abd; }
+
+        /* Əsas İnterfeys */
+        #main-content { display: none; }
+        h2 { color: #333; border-bottom: 2px solid #eee; padding-bottom: 10px; }
+        .input-group { display: flex; gap: 10px; margin-bottom: 20px; }
+        
+        /* Siyahı Dizaynı */
+        ul { list-style: none; padding: 0; }
+        li { background: #fff; border: 1px solid #eee; padding: 10px; margin-bottom: 8px; border-radius: 6px; display: flex; justify-content: space-between; align-items: center; transition: 0.3s; }
+        li:hover { background: #f9f9f9; }
+        .delete-btn { background: #ff5e5e; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; }
+        
+        .notes-section { margin-top: 30px; }
+        textarea { height: 150px; resize: vertical; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div id="login-screen">
+        <h2>Giriş</h2>
+        <input type="password" id="password-input" placeholder="Şifrəni daxil edin...">
+        <button onclick="checkPassword()">Daxil Ol</button>
+        <p id="error-msg" style="color: red; display: none;">Yanlış şifrə!</p>
+    </div>
+
+    <div id="main-content">
+        <h2>Tapşırıqlarım</h2>
+        <div class="input-group">
+            <input type="text" id="todo-input" placeholder="Yeni tapşırıq...">
+            <button style="width: 80px;" onclick="addTodo()">Əlavə et</button>
+        </div>
+        <ul id="todo-list"></ul>
+
+        <div class="notes-section">
+            <h2>Qeydlərim</h2>
+            <textarea id="notes-area" placeholder="Vacib qeydlərinizi bura yazın..." oninput="saveNotes()"></textarea>
+        </div>
+        <button onclick="logout()" style="margin-top: 20px; background: #666;">Çıxış</button>
+    </div>
+</div>
+
+<script>
+    const CORRECT_PASSWORD = "1234"; // Şifrəni buradan dəyişə bilərsiniz
+
+    // Şifrə yoxlanışı
+    function checkPassword() {
+        const pass = document.getElementById('password-input').value;
+        if (pass === CORRECT_PASSWORD) {
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('main-content').style.display = 'block';
+            loadData();
+        } else {
+            document.getElementById('error-msg').style.display = 'block';
+        }
+    }
+
+    // Çıxış funksiyası
+    function logout() {
+        location.reload();
+    }
+
+    // Tapşırıq əlavə etmək
+    function addTodo() {
+        const input = document.getElementById('todo-input');
+        const text = input.value.trim();
+        if (text === "") return;
+
+        const todos = JSON.parse(localStorage.getItem('todos') || '[]');
+        todos.push(text);
+        localStorage.setItem('todos', JSON.stringify(todos));
+        
+        input.value = "";
+        renderTodos();
+    }
+
+    // Tapşırıqları silmək
+    function deleteTodo(index) {
+        const todos = JSON.parse(localStorage.getItem('todos') || '[]');
+        todos.splice(index, 1);
+        localStorage.setItem('todos', JSON.stringify(todos));
+        renderTodos();
+    }
+
+    // Ekranda göstərmək
+    function renderTodos() {
+        const list = document.getElementById('todo-list');
+        const todos = JSON.parse(localStorage.getItem('todos') || '[]');
+        list.innerHTML = "";
+        
+        todos.forEach((todo, index) => {
+            const li = document.createElement('li');
+            li.innerHTML = `
+                <span>${todo}</span>
+                <button class="delete-btn" onclick="deleteTodo(${index})">Sil</button>
+            `;
+            list.appendChild(li);
+        });
+    }
+
+    // Qeydləri saxlamaq
+    function saveNotes() {
+        const notes = document.getElementById('notes-area').value;
+        localStorage.setItem('user_notes', notes);
+    }
+
+    // Məlumatları yükləmək
+    function loadData() {
+        renderTodos();
+        const savedNotes = localStorage.getItem('user_notes');
+        if (savedNotes) {
+            document.getElementById('notes-area').value = savedNotes;
+        }
+    }
+</script>
+
+</body>
+</html>
