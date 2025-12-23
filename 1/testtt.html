@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sürpriz Test Rejimi</title>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Cinzel:wght@400;700&family=Lora:ital@1&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #020202;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            font-family: 'Lora', serif;
+            color: white;
+            cursor: default;
+        }
+
+        /* Arxa fon ulduzları və duman effekti */
+        .stars {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at center, #1b1b1b 0%, #000 100%);
+            z-index: -2;
+        }
+
+        .glow {
+            position: absolute;
+            width: 400px;
+            height: 400px;
+            background: rgba(212, 175, 55, 0.08);
+            filter: blur(120px);
+            border-radius: 50%;
+            z-index: -1;
+            animation: move 8s infinite alternate;
+        }
+
+        @keyframes move {
+            from { transform: translate(-40%, -40%); }
+            to { transform: translate(40%, 40%); }
+        }
+
+        /* Başlanğıc Pərdəsi */
+        #gate {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: #000;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            transition: 1.5s ease-out;
+        }
+
+        .gate-btn {
+            background: none;
+            border: 1px solid #d4af37;
+            color: #d4af37;
+            padding: 15px 40px;
+            font-family: 'Cinzel', serif;
+            letter-spacing: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: 0.5s;
+            box-shadow: 0 0 15px rgba(212, 175, 55, 0.1);
+        }
+
+        .gate-btn:hover {
+            background: #d4af37;
+            color: #000;
+            box-shadow: 0 0 30px #d4af37;
+        }
+
+        /* Geri Sayım Bölməsi */
+        #timer-wrap {
+            text-align: center;
+            transition: 1.5s;
+        }
+
+        .digits {
+            font-size: 8rem;
+            font-family: 'Cinzel', serif;
+            color: #d4af37;
+            font-weight: 700;
+            text-shadow: 0 0 30px rgba(212, 175, 55, 0.3);
+        }
+
+        /* Təbrik Bölməsi */
+        #wish-wrap {
+            display: none;
+            opacity: 0;
+            text-align: center;
+            max-width: 850px;
+            padding: 40px;
+            transform: scale(0.9);
+            transition: all 3s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+
+        .bday-text {
+            font-family: 'Dancing Script', cursive;
+            font-size: 7rem;
+            color: #d4af37;
+            margin: 0;
+            filter: drop-shadow(0 0 20px rgba(212, 175, 55, 0.6));
+            animation: floating 4s ease-in-out infinite;
+        }
+
+        .lyric-msg {
+            font-size: 1.8rem;
+            margin-top: 30px;
+            line-height: 1.6;
+            color: #f0f0f0;
+            font-style: italic;
+            font-weight: 300;
+        }
+
+        @keyframes floating {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+
+        .test-label {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: #333;
+            font-size: 0.7rem;
+            letter-spacing: 2px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="test-label">TEST REJİMİ (5 SANİYƏ)</div>
+    <div class="stars"></div>
+    <div class="glow"></div>
+
+    <div id="gate">
+        <button class="gate-btn" onclick="startTest()">DAXİL OL</button>
+        <p style="margin-top: 20px; color: #444; font-size: 0.7rem; letter-spacing: 2px;">SƏSİ AÇIN</p>
+    </div>
+
+    <div id="timer-wrap" style="display: none;">
+        <div class="digits" id="count">5</div>
+    </div>
+
+    <div id="wish-wrap">
+        <h1 class="bday-text">Ad Günün Mübarək! ✨</h1>
+        <p class="lyric-msg">
+            Bu melodiya qədər huzurlu bir il, <br>
+            ulduzlar qədər parlaq bir gələcək sənin olsun. <br>
+            Həyatın hər anı sevgidən ibarət olsun...
+        </p>
+        <div style="margin-top: 50px; font-size: 2.5rem;">🥂 🕯️ 🎁</div>
+    </div>
+
+    <audio id="bgMusic" loop>
+        <source src="https://www.chosic.com/wp-content/uploads/2021/04/Rainy-Day-Implicit-Piano-Solo.mp3" type="audio/mpeg">
+    </audio>
+
+    <script>
+        const audio = document.getElementById('bgMusic');
+
+        function startTest() {
+            // Pərdəni qaldır
+            document.getElementById('gate').style.opacity = '0';
+            
+            setTimeout(() => {
+                document.getElementById('gate').style.display = 'none';
+                document.getElementById('timer-wrap').style.display = 'block';
+                
+                // Musiqini başlat (0.7 səs səviyyəsi)
+                audio.volume = 0.7;
+                audio.play();
+
+                // 5 saniyəlik test geri sayımı
+                let timeLeft = 5;
+                const countDisplay = document.getElementById('count');
+
+                const timer = setInterval(() => {
+                    timeLeft--;
+                    countDisplay.innerText = timeLeft;
+
+                    if (timeLeft <= 0) {
+                        clearInterval(timer);
+                        showFinalSurprise();
+                    }
+                }, 1000);
+            }, 1000);
+        }
+
+        function showFinalSurprise() {
+            // Saatı itir
+            document.getElementById('timer-wrap').style.opacity = '0';
+            
+            setTimeout(() => {
+                document.getElementById('timer-wrap').style.display = 'none';
+                const wish = document.getElementById('wish-wrap');
+                wish.style.display = 'block';
+                
+                // Animasiyalı giriş
+                setTimeout(() => { 
+                    wish.style.opacity = '1'; 
+                    wish.style.transform = 'scale(1)';
+                }, 100);
+
+                // Qızılı konfeti yağışı (Yanlardan mərkəzə)
+                const duration = 15 * 1000;
+                const end = Date.now() + duration;
+
+                (function frame() {
+                    confetti({
+                        particleCount: 2,
+                        angle: 60,
+                        spread: 55,
+                        origin: { x: 0, y: 0.8 },
+                        colors: ['#d4af37', '#ffffff', '#f9e29c']
+                    });
+                    confetti({
+                        particleCount: 2,
+                        angle: 120,
+                        spread: 55,
+                        origin: { x: 1, y: 0.8 },
+                        colors: ['#d4af37', '#ffffff', '#f9e29c']
+                    });
+
+                    if (Date.now() < end) {
+                        requestAnimationFrame(frame);
+                    }
+                }());
+            }, 1000);
+        }
+    </script>
+</body>
+</html>
