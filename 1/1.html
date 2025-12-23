@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Xüsusi Sürpriz</title>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Cinzel:wght@400;700&family=Lora:ital@1&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #020202;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            font-family: 'Lora', serif;
+            color: white;
+        }
+
+        /* Arxa fon effektləri */
+        .stars {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at center, #1b1b1b 0%, #000 100%);
+            z-index: -2;
+        }
+
+        .glow {
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            background: rgba(212, 175, 55, 0.1);
+            filter: blur(100px);
+            border-radius: 50%;
+            z-index: -1;
+            animation: move 10s infinite alternate;
+        }
+
+        @keyframes move {
+            from { transform: translate(-50%, -50%); }
+            to { transform: translate(50%, 50%); }
+        }
+
+        /* Giriş Pərdəsi */
+        #gate {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: #000;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            transition: 2s;
+        }
+
+        .gate-btn {
+            background: none;
+            border: 1px solid #d4af37;
+            color: #d4af37;
+            padding: 20px 40px;
+            font-family: 'Cinzel', serif;
+            letter-spacing: 5px;
+            cursor: pointer;
+            font-size: 1.2rem;
+            transition: 0.5s;
+        }
+
+        .gate-btn:hover {
+            background: #d4af37;
+            color: #000;
+            box-shadow: 0 0 30px #d4af37;
+        }
+
+        /* Geri Sayım */
+        #timer-wrap {
+            text-align: center;
+            transition: 1.5s;
+        }
+
+        .mystery-title {
+            font-family: 'Cinzel', serif;
+            font-size: 0.9rem;
+            letter-spacing: 10px;
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        .digits {
+            font-size: 6rem;
+            font-family: 'Cinzel', serif;
+            color: #d4af37;
+            font-weight: 700;
+        }
+
+        /* Təbrik Bölməsi */
+        #wish-wrap {
+            display: none;
+            opacity: 0;
+            text-align: center;
+            max-width: 800px;
+            padding: 20px;
+        }
+
+        .bday-text {
+            font-family: 'Dancing Script', cursive;
+            font-size: 7rem;
+            color: #d4af37;
+            margin: 0;
+            filter: drop-shadow(0 0 15px rgba(212, 175, 55, 0.6));
+            animation: floating 3s ease-in-out infinite;
+        }
+
+        .lyric-msg {
+            font-size: 1.8rem;
+            margin-top: 20px;
+            line-height: 1.6;
+            color: #e0e0e0;
+            font-style: italic;
+        }
+
+        @keyframes floating {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-15px); }
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="stars"></div>
+    <div class="glow"></div>
+
+    <div id="gate">
+        <button class="gate-btn" onclick="openGate()">SƏNİN ÜÇÜN...</button>
+        <p style="margin-top: 20px; color: #333; font-size: 0.7rem; letter-spacing: 2px;">SƏSİ AÇIN</p>
+    </div>
+
+    <div id="timer-wrap">
+        <div class="mystery-title">Zamanın möcüzəsi gözlənilir</div>
+        <div class="digits" id="countdown">10</div>
+    </div>
+
+    <div id="wish-wrap">
+        <h1 class="bday-text">Ad Günün Mübarək!</h1>
+        <p class="lyric-msg">
+            Bəzən sözlər yetməz, musiqi danışar... <br>
+            Yeni yaşında ruhun bu melodiya qədər azad, <br>
+            həyatın ulduzlar qədər parlaq olsun.
+        </p>
+        <div style="margin-top: 40px; font-size: 2.5rem;">✨ 🥂 ✨</div>
+    </div>
+
+    <audio id="bgMusic" loop>
+        <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-15.mp3" type="audio/mpeg">
+    </audio>
+
+    <script>
+        const audio = document.getElementById('bgMusic');
+        
+        function openGate() {
+            document.getElementById('gate').style.opacity = '0';
+            setTimeout(() => {
+                document.getElementById('gate').style.display = 'none';
+                audio.play(); // Musiqi burada başlayır
+                startTimer();
+            }, 2000);
+        }
+
+        function startTimer() {
+            let timeLeft = 10; // TEST ÜÇÜN 10 SANİYƏ
+            const display = document.getElementById('countdown');
+
+            const timer = setInterval(() => {
+                timeLeft--;
+                display.innerText = timeLeft;
+
+                if (timeLeft <= 0) {
+                    clearInterval(timer);
+                    showSurprise();
+                }
+            }, 1000);
+        }
+
+        function showSurprise() {
+            document.getElementById('timer-wrap').style.opacity = '0';
+            
+            setTimeout(() => {
+                document.getElementById('timer-wrap').style.display = 'none';
+                const wish = document.getElementById('wish-wrap');
+                wish.style.display = 'block';
+                
+                setTimeout(() => { wish.style.opacity = '1'; }, 100);
+
+                // Mükəmməl qızılı konfeti yağışı
+                const end = Date.now() + (30 * 1000);
+                const colors = ['#d4af37', '#ffffff', '#f9e29c'];
+
+                (function frame() {
+                    confetti({
+                        particleCount: 2,
+                        angle: 60,
+                        spread: 55,
+                        origin: { x: 0, y: 0.8 },
+                        colors: colors
+                    });
+                    confetti({
+                        particleCount: 2,
+                        angle: 120,
+                        spread: 55,
+                        origin: { x: 1, y: 0.8 },
+                        colors: colors
+                    });
+
+                    if (Date.now() < end) {
+                        requestAnimationFrame(frame);
+                    }
+                }());
+            }, 1000);
+        }
+    </script>
+</body>
+</html>
