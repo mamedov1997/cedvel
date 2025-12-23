@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ad Günün Mübarək!</title>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Poppins:wght@300;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #0a0a0a;
+            color: #fff;
+            font-family: 'Poppins', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+            text-align: center;
+        }
+
+        /* Arxa fon animasiyası */
+        .background {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, #1a1a1a 0%, #000 100%);
+            z-index: -1;
+        }
+
+        #timer-container, #celebration {
+            padding: 20px;
+            transition: all 1s ease-in-out;
+        }
+
+        #celebration {
+            display: none;
+            opacity: 0;
+        }
+
+        h1 {
+            font-family: 'Dancing Script', cursive;
+            font-size: 5rem;
+            color: #d4af37;
+            text-shadow: 0 0 20px rgba(212, 175, 55, 0.5);
+            margin-bottom: 10px;
+        }
+
+        .countdown-box {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .time-unit {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px 25px;
+            border-radius: 15px;
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            min-width: 80px;
+        }
+
+        .time-unit span {
+            display: block;
+            font-size: 2.5rem;
+            font-weight: 600;
+            color: #fff;
+        }
+
+        .label {
+            font-size: 0.8rem;
+            color: #d4af37;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .message {
+            font-size: 1.5rem;
+            color: #ccc;
+            max-width: 600px;
+            margin: 20px auto;
+            line-height: 1.6;
+        }
+
+        /* Parıltı animasiyası */
+        .glow-text {
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes glow {
+            from { text-shadow: 0 0 10px #d4af37; }
+            to { text-shadow: 0 0 30px #f9e29c, 0 0 10px #d4af37; }
+        }
+
+        #music-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(212, 175, 55, 0.2);
+            border: 1px solid #d4af37;
+            color: #d4af37;
+            padding: 10px 20px;
+            border-radius: 50px;
+            cursor: pointer;
+            z-index: 100;
+        }
+    </style>
+</head>
+<body onclick="playMusic()">
+
+    <div class="background"></div>
+    
+    <div id="timer-container">
+        <h2 style="color: #d4af37; letter-spacing: 5px;">SÜRPRİZƏ QALDI...</h2>
+        <div class="countdown-box">
+            <div class="time-unit"><span id="days">00</span><div class="label">Gün</div></div>
+            <div class="time-unit"><span id="hours">00</span><div class="label">Saat</div></div>
+            <div class="time-unit"><span id="minutes">00</span><div class="label">Dəq</div></div>
+            <div class="time-unit"><span id="seconds">00</span><div class="label">San</div></div>
+        </div>
+    </div>
+
+    <div id="celebration">
+        <h1 class="glow-text">Ad Günün Mübarək! 🎂</h1>
+        <p class="message">
+            Yeni yaşında sənə sonsuz xoşbəxtlik, möhkəm can sağlığı və bütün arzularının çin olmasını arzulayıram. 
+            Həmişə gülərüz və sevgi dolu qal! ✨
+        </p>
+        <div style="font-size: 3rem;">🎁 🎈 🌟</div>
+    </div>
+
+    <button id="music-btn">🎵 Musiqini Başlat</button>
+
+    <audio id="bg-music" loop>
+        <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mpeg">
+        </audio>
+
+    <script>
+        // Hədəf vaxt: 26 Dekabr 2025, 00:00:00
+        const targetDate = new Date("December 26, 2025 00:00:00").getTime();
+
+        function updateCountdown() {
+            const now = new Date().getTime();
+            const distance = targetDate - now;
+
+            if (distance < 0) {
+                showCelebration();
+                return;
+            }
+
+            const d = Math.floor(distance / (1000 * 60 * 60 * 24));
+            const h = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const m = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+            const s = Math.floor((distance % (1000 * 60)) / 1000);
+
+            document.getElementById("days").innerText = d.toString().padStart(2, '0');
+            document.getElementById("hours").innerText = h.toString().padStart(2, '0');
+            document.getElementById("minutes").innerText = m.toString().padStart(2, '0');
+            document.getElementById("seconds").innerText = s.toString().padStart(2, '0');
+        }
+
+        function showCelebration() {
+            document.getElementById("timer-container").style.display = "none";
+            const celeb = document.getElementById("celebration");
+            celeb.style.display = "block";
+            setTimeout(() => { celeb.style.opacity = "1"; }, 50);
+            
+            launchConfetti();
+            setInterval(launchConfetti, 3000);
+        }
+
+        function launchConfetti() {
+            confetti({
+                particleCount: 150,
+                spread: 70,
+                origin: { y: 0.6 },
+                colors: ['#d4af37', '#ffffff', '#f9e29c']
+            });
+        }
+
+        function playMusic() {
+            const audio = document.getElementById("bg-music");
+            audio.play();
+            document.getElementById("music-btn").style.display = "none";
+        }
+
+        setInterval(updateCountdown, 1000);
+        updateCountdown();
+    </script>
+</body>
+</html>
