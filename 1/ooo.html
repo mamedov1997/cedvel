@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>...</title>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Cinzel:wght@400;700&family=Lora:ital@1&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #020202;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            font-family: 'Lora', serif;
+            color: white;
+        }
+
+        .stars {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at center, #1b1b1b 0%, #000 100%);
+            z-index: -2;
+        }
+
+        .glow {
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            background: rgba(212, 175, 55, 0.05);
+            filter: blur(100px);
+            border-radius: 50%;
+            z-index: -1;
+            animation: move 12s infinite alternate;
+        }
+
+        @keyframes move {
+            from { transform: translate(-30%, -30%); }
+            to { transform: translate(30%, 30%); }
+        }
+
+        #gate {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: #000;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            transition: 2s;
+        }
+
+        .gate-btn {
+            background: none;
+            border: 1px solid #333;
+            color: #555;
+            padding: 15px 35px;
+            font-family: 'Cinzel', serif;
+            letter-spacing: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: 0.8s;
+            border-radius: 2px;
+        }
+
+        .gate-btn:hover {
+            border-color: #d4af37;
+            color: #d4af37;
+            box-shadow: 0 0 20px rgba(212, 175, 55, 0.2);
+        }
+
+        #timer-wrap {
+            text-align: center;
+            transition: 2s;
+        }
+
+        .timer-grid {
+            display: flex;
+            gap: 25px;
+        }
+
+        .unit {
+            text-align: center;
+        }
+
+        .digits {
+            font-size: 4.5rem;
+            font-family: 'Cinzel', serif;
+            color: #d4af37;
+            font-weight: 400;
+            line-height: 1;
+        }
+
+        .label {
+            font-size: 0.6rem;
+            letter-spacing: 3px;
+            color: #444;
+            margin-top: 10px;
+            text-transform: uppercase;
+        }
+
+        #wish-wrap {
+            display: none;
+            opacity: 0;
+            text-align: center;
+            max-width: 850px;
+            padding: 30px;
+            transition: opacity 4s ease-in;
+        }
+
+        .bday-text {
+            font-family: 'Dancing Script', cursive;
+            font-size: 6.5rem;
+            color: #d4af37;
+            margin: 0;
+            filter: drop-shadow(0 0 20px rgba(212, 175, 55, 0.5));
+            animation: floating 4s ease-in-out infinite;
+        }
+
+        .lyric-msg {
+            font-size: 1.6rem;
+            margin-top: 25px;
+            line-height: 1.8;
+            color: #dcdcdc;
+            font-style: italic;
+            font-weight: 300;
+        }
+
+        @keyframes floating {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="stars"></div>
+    <div class="glow"></div>
+
+    <div id="gate">
+        <button class="gate-btn" onclick="openGate()">DAXİL OL</button>
+    </div>
+
+    <div id="timer-wrap">
+        <div class="timer-grid">
+            <div class="unit"><span class="digits" id="d">00</span><div class="label">Gün</div></div>
+            <div class="unit"><span class="digits" id="h">00</span><div class="label">Saat</div></div>
+            <div class="unit"><span class="digits" id="m">00</span><div class="label">Dəq</div></div>
+            <div class="unit"><span class="digits" id="s">00</span><div class="label">San</div></div>
+        </div>
+    </div>
+
+    <div id="wish-wrap">
+        <h1 class="bday-text">Ad Günün Mübarək!</h1>
+        <p class="lyric-msg">
+            Həyatın bu musiqi qədər həzin və dərindən, <br>
+            gələcəyin isə ulduzlar qədər parlaq və işıqlı olsun. <br>
+            Yaxşı ki varsan...
+        </p>
+        <div style="margin-top: 50px; font-size: 2rem; color: #d4af37; opacity: 0.5;">✧ ✨ ✧</div>
+    </div>
+
+    <audio id="bgMusic" loop>
+        <source src="https://www.chosic.com/wp-content/uploads/2021/04/Rainy-Day-Implicit-Piano-Solo.mp3" type="audio/mpeg">
+    </audio>
+
+    <script>
+        const audio = document.getElementById('bgMusic');
+        const targetDate = new Date("December 27, 2025 00:00:01").getTime();
+
+        function openGate() {
+            document.getElementById('gate').style.opacity = '0';
+            setTimeout(() => {
+                document.getElementById('gate').style.display = 'none';
+                audio.volume = 0.6;
+                audio.play();
+                updateTimer();
+            }, 1500);
+        }
+
+        function updateTimer() {
+            const now = new Date().getTime();
+            const gap = targetDate - now;
+
+            if (gap <= 0) {
+                showSurprise();
+                return;
+            }
+
+            const days = Math.floor(gap / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((gap % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const mins = Math.floor((gap % (1000 * 60 * 60)) / (1000 * 60));
+            const secs = Math.floor((gap % (1000 * 60)) / 1000);
+
+            document.getElementById('d').innerText = days.toString().padStart(2, '0');
+            document.getElementById('h').innerText = hours.toString().padStart(2, '0');
+            document.getElementById('m').innerText = mins.toString().padStart(2, '0');
+            document.getElementById('s').innerText = secs.toString().padStart(2, '0');
+
+            requestAnimationFrame(updateTimer);
+        }
+
+        function showSurprise() {
+            document.getElementById('timer-wrap').style.opacity = '0';
+            
+            setTimeout(() => {
+                document.getElementById('timer-wrap').style.display = 'none';
+                const wish = document.getElementById('wish-wrap');
+                wish.style.display = 'block';
+                
+                setTimeout(() => { wish.style.opacity = '1'; }, 100);
+
+                // Qızılı ulduz effekti
+                const end = Date.now() + (60 * 1000);
+                const colors = ['#d4af37', '#ffffff', '#f1f1f1'];
+
+                (function frame() {
+                    confetti({
+                        particleCount: 2,
+                        angle: 60,
+                        spread: 60,
+                        origin: { x: 0, y: 0.7 },
+                        colors: colors,
+                        ticks: 200
+                    });
+                    confetti({
+                        particleCount: 2,
+                        angle: 120,
+                        spread: 60,
+                        origin: { x: 1, y: 0.7 },
+                        colors: colors,
+                        ticks: 200
+                    });
+
+                    if (Date.now() < end) {
+                        requestAnimationFrame(frame);
+                    }
+                }());
+            }, 1500);
+        }
+    </script>
+</body>
+</html>
