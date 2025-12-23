@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gözlənilir...</title>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Playfair+Display:ital,wght@0,400;1,600&family=Montserrat:wght@200;400&display=swap" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #050505;
+            color: #fff;
+            font-family: 'Montserrat', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+            text-align: center;
+        }
+
+        .overlay {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at center, #111 0%, #000 100%);
+            z-index: -1;
+        }
+
+        /* Geri sayım (Gizli rejim) */
+        #countdown-section {
+            display: block;
+            transition: opacity 1s ease;
+        }
+
+        .mystery-text {
+            font-size: 0.8rem;
+            letter-spacing: 8px;
+            color: #444;
+            margin-bottom: 40px;
+            text-transform: uppercase;
+        }
+
+        .timer-grid {
+            display: flex;
+            gap: 30px;
+            justify-content: center;
+        }
+
+        .unit span {
+            display: block;
+            font-size: 5rem;
+            font-family: 'Playfair Display', serif;
+            font-weight: 200;
+            color: #d4af37;
+            text-shadow: 0 0 15px rgba(212, 175, 55, 0.2);
+        }
+
+        .unit label {
+            font-size: 0.6rem;
+            letter-spacing: 3px;
+            color: #333;
+        }
+
+        /* Təbrik Ekranı */
+        #birthday-section {
+            display: none;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 3s ease-out;
+        }
+
+        .main-wish {
+            font-family: 'Dancing Script', cursive;
+            font-size: 5.5rem;
+            color: #d4af37;
+            text-shadow: 0 0 40px rgba(212, 175, 55, 0.5);
+            margin: 0;
+        }
+
+        .quote {
+            font-family: 'Playfair Display', serif;
+            font-style: italic;
+            font-size: 1.5rem;
+            color: #a0a0a0;
+            margin-top: 20px;
+            max-width: 600px;
+            line-height: 1.6;
+        }
+
+        /* Test Başlatma Düyməsi */
+        #start-btn {
+            background: none;
+            border: 1px solid #d4af37;
+            color: #d4af37;
+            padding: 15px 40px;
+            cursor: pointer;
+            letter-spacing: 3px;
+            font-size: 1rem;
+            border-radius: 50px;
+            transition: 0.5s;
+        }
+        #start-btn:hover { background: #d4af37; color: #000; box-shadow: 0 0 20px #d4af37; }
+    </style>
+</head>
+<body>
+
+    <div class="overlay"></div>
+
+    <div id="init-container">
+        <button id="start-btn" onclick="startTest()">TESTİ BAŞLAT</button>
+        <p style="color: #444; margin-top: 20px; font-size: 0.8rem;">(Musiqi və animasiyanı yoxlamaq üçün)</p>
+    </div>
+
+    <div id="countdown-section" style="display: none;">
+        <div class="mystery-text">Zamanın axışı</div>
+        <div class="timer-grid">
+            <div class="unit"><span id="test-seconds">10</span><label>SANİYƏ</label></div>
+        </div>
+    </div>
+
+    <div id="birthday-section">
+        <h1 class="main-wish">Ad Günün Mübarək! ✨</h1>
+        <p class="quote">Həyatındakı hər saniyə bu melodiya qədər lirik, qəlbin hər zaman huzur dolu olsun.</p>
+        <div style="font-size: 2rem; margin-top: 40px; color: #d4af37; opacity: 0.6;">✧ ✧ ✧</div>
+    </div>
+
+    <audio id="lyrical-music" loop>
+        <source src="https://www.chosic.com/wp-content/uploads/2021/04/Rainy-Day-Implicit-Piano-Solo.mp3" type="audio/mpeg">
+    </audio>
+
+    <script>
+        function startTest() {
+            // Düyməni gizlət, geri sayımı göstər
+            document.getElementById('init-container').style.display = 'none';
+            document.getElementById('countdown-section').style.display = 'block';
+            
+            // Musiqini başlat
+            const music = document.getElementById('lyrical-music');
+            music.volume = 0.7;
+            music.play();
+
+            let timeLeft = 10;
+            const secondsDisplay = document.getElementById('test-seconds');
+
+            const timer = setInterval(() => {
+                timeLeft--;
+                secondsDisplay.innerText = timeLeft.toString().padStart(2, '0');
+
+                if (timeLeft <= 0) {
+                    clearInterval(timer);
+                    revealSurprise();
+                }
+            }, 1000);
+        }
+
+        function revealSurprise() {
+            // Geri sayımı itir
+            document.getElementById('countdown-section').style.opacity = '0';
+            
+            setTimeout(() => {
+                document.getElementById('countdown-section').style.display = 'none';
+                const bday = document.getElementById('birthday-section');
+                bday.style.display = 'block';
+                
+                // Animasiyalı giriş
+                setTimeout(() => { 
+                    bday.style.opacity = '1'; 
+                    bday.style.transform = 'translateY(0)';
+                }, 100);
+
+                // Zərif qızılı ulduz yağışı (Konfeti)
+                const duration = 20 * 1000;
+                const end = Date.now() + duration;
+
+                (function frame() {
+                    confetti({
+                        particleCount: 1,
+                        startVelocity: 0,
+                        ticks: 300,
+                        origin: {
+                            x: Math.random(),
+                            y: Math.random() - 0.2
+                        },
+                        colors: ['#d4af37', '#ffffff', '#f9e29c'],
+                        shapes: ['circle'],
+                        gravity: 0.15,
+                        scalar: 0.6
+                    });
+
+                    if (Date.now() < end) {
+                        requestAnimationFrame(frame);
+                    }
+                }());
+            }, 1000);
+        }
+    </script>
+</body>
+</html>
