@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ad Günü Test Modu</title>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Poppins:wght@300;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #050505;
+            color: #fff;
+            font-family: 'Poppins', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+            text-align: center;
+            cursor: pointer;
+        }
+
+        .background {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at center, #1a1a1a 0%, #000 100%);
+            z-index: -1;
+        }
+
+        /* Qızılı neon effekti */
+        .gold-text {
+            color: #d4af37;
+            text-shadow: 0 0 15px rgba(212, 175, 55, 0.7);
+        }
+
+        #timer-container {
+            transition: opacity 1s ease;
+        }
+
+        #celebration {
+            display: none;
+            opacity: 0;
+            transform: scale(0.8);
+            transition: all 1.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        h1 {
+            font-family: 'Dancing Script', cursive;
+            font-size: 5.5rem;
+            margin-bottom: 0;
+        }
+
+        .counter {
+            font-size: 8rem;
+            font-weight: 600;
+            color: #d4af37;
+        }
+
+        .message {
+            font-size: 1.4rem;
+            max-width: 700px;
+            margin: 20px auto;
+            line-height: 1.8;
+            color: #e0e0e0;
+        }
+
+        /* Animasiyalar */
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+            100% { transform: translateY(0px); }
+        }
+
+        .floating {
+            animation: float 3s ease-in-out infinite;
+        }
+
+        #click-hint {
+            position: absolute;
+            bottom: 30px;
+            font-size: 0.9rem;
+            letter-spacing: 2px;
+            color: #666;
+            animation: blink 1.5s infinite;
+        }
+
+        @keyframes blink {
+            50% { opacity: 0; }
+        }
+    </style>
+</head>
+<body onclick="startExperience()">
+
+    <div class="background"></div>
+
+    <div id="click-hint">BAŞLAMAQ ÜÇÜN EKRANA TOXUN</div>
+
+    <div id="timer-container" style="display: none;">
+        <h2 class="gold-text" style="letter-spacing: 5px;">SÜRPRİZ BAŞLAYIR...</h2>
+        <div class="counter" id="test-seconds">5</div>
+    </div>
+
+    <div id="celebration">
+        <div class="floating">
+            <h1 class="gold-text">Ad Günün Mübarək! ✨</h1>
+        </div>
+        <p class="message">
+            Bu gün sənin günündür! Hər yeni günün bir əvvəlkindən daha parlaq, 
+            hər arzun bir ulduz qədər əlçatan olsun. 2026-cı il sənə ən böyük uğurları gətirsin! 🥂
+        </p>
+        <div style="font-size: 4rem; margin-top: 20px;">🎂 🎁 🎈</div>
+    </div>
+
+    <audio id="bg-music">
+        <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mpeg">
+    </audio>
+
+    <script>
+        let musicStarted = false;
+
+        function startExperience() {
+            if (musicStarted) return;
+            musicStarted = true;
+            
+            document.getElementById('click-hint').style.display = 'none';
+            document.getElementById('timer-container').style.display = 'block';
+            document.getElementById('bg-music').play();
+
+            let timeLeft = 5;
+            const timerDisplay = document.getElementById('test-seconds');
+
+            const countdown = setInterval(() => {
+                timeLeft--;
+                timerDisplay.innerText = timeLeft;
+
+                if (timeLeft <= 0) {
+                    clearInterval(countdown);
+                    triggerSurprise();
+                }
+            }, 1000);
+        }
+
+        function triggerSurprise() {
+            document.getElementById('timer-container').style.opacity = '0';
+            
+            setTimeout(() => {
+                document.getElementById('timer-container').style.display = 'none';
+                const celeb = document.getElementById('celebration');
+                celeb.style.display = 'block';
+                
+                setTimeout(() => {
+                    celeb.style.opacity = '1';
+                    celeb.style.transform = 'scale(1)';
+                }, 100);
+
+                // Davamlı konfeti yağışı
+                const duration = 15 * 1000;
+                const animationEnd = Date.now() + duration;
+                const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
+
+                const interval = setInterval(function() {
+                    const timeLeft = animationEnd - Date.now();
+                    if (timeLeft <= 0) return clearInterval(interval);
+
+                    const particleCount = 50 * (timeLeft / duration);
+                    confetti(Object.assign({}, defaults, { particleCount, origin: { x: Math.random(), y: Math.random() - 0.2 } }));
+                }, 250);
+            }, 1000);
+        }
+    </script>
+</body>
+</html>
